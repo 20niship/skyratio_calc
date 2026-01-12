@@ -112,7 +112,21 @@ class SceneRaycasterPython:
         Note: euler parameter is accepted for API compatibility with C++ version,
         but rotation is not supported in this simplified Python implementation.
         All boxes are axis-aligned.
+        
+        Args:
+            pos: Position [x, y, z]
+            size: Size [width, height, depth]
+            euler: Euler angles (ignored - for API compatibility only)
+        
+        Raises:
+            NotImplementedError: If non-zero euler angles are provided
         """
+        if euler is not None and any(abs(angle) > 1e-6 for angle in euler):
+            raise NotImplementedError(
+                "Rotation (euler angles) is not supported in the Python implementation. "
+                "Only axis-aligned boxes are supported."
+            )
+        
         center = Vec3.from_list(pos)
         box_size = Vec3.from_list(size)
         self.boxes.append(Box(center, box_size))
