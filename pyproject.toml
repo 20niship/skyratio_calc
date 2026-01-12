@@ -11,6 +11,9 @@ requires-python = ">=3.9"
 authors = [
     { name = "20niship" }
 ]
+dependencies = [
+    "flake8-pyproject>=1.2.4",
+]
 
 [tool.scikit-build]
 minimum-version = "0.4"
