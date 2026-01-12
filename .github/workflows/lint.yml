@@ -11,31 +11,27 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.13"]
     
     steps:
     - name: リポジトリのチェックアウト
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         submodules: recursive
-    
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+  
     - name: Python ${{ matrix.python-version }} のセットアップ
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Lintツールのインストール
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 mypy
+    - name: install via uv
+      run: uv sync
     
     - name: Flake8によるコードスタイルチェック
-      run: |
-        # E501: 行の長さ制限を緩和（88文字まで許可）
-        # W503: 演算子の前の改行を許可
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=./build,./src/ext
-        flake8 . --count --max-line-length=88 --ignore=W503,E501 --statistics --exclude=./build,./src/ext
-    
-    - name: Mypyによる型チェック（スタブファイル）
-      run: |
-        mypy skyratio_calc.pyi --strict
+      run: uv run flake8 --show-source .
+
+    - name: MyPyによる型チェック
+      run: uv run pyright .

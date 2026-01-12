@@ -69,3 +69,4 @@ _codeql_build_dir/
 
 .clangd
 .cache
+uv.lock

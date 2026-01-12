@@ -9,8 +9,8 @@ testディレクトリから実行してください:
 
 import time
 import os
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt  # type: ignore
+import numpy as np  # type: ignore
 import skyratio_calc
 from python_implementation import SceneRaycasterPython, SkyRatioCheckerPython
 
