@@ -3,9 +3,9 @@ requires = ["scikit-build-core", "nanobind"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "sky-ratio-calc"
+name = "skyratio_calc"
 version = "0.1.0"
-description = "天空率計算プロジェクト - nanobindサンプル"
+description = "天空率計算"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
@@ -17,3 +17,20 @@ minimum-version = "0.4"
 build-dir = "build/{wheel_tag}"
 cmake.verbose = true
 logging.level = "INFO"
+
+[tool.ruff]
+line-length = 160
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

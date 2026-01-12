@@ -38,4 +38,4 @@ jobs:
     
     - name: Mypyによる型チェック（スタブファイル）
       run: |
-        mypy sky_ratio_calc.pyi --strict
+        mypy skyratio_calc.pyi --strict

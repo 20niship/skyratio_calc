@@ -1,12 +1,12 @@
 """
 C++バインディングのテスト
 """
-import sky_ratio_calc
+import skyratio_calc
 
 
 def test_scene_raycaster():
     """SceneRaycasterのテスト"""
-    scene = sky_ratio_calc.SceneRaycaster()
+    scene = skyratio_calc.SceneRaycaster()
     
     # ボックスと球体を追加
     scene.add_box([0.0, 0.0, 5.0], [2.0, 2.0, 2.0], [0.0, 0.0, 0.0])
@@ -25,11 +25,11 @@ def test_scene_raycaster():
 
 def test_sky_ratio_checker():
     """SkyRatioCheckerのテスト"""
-    scene = sky_ratio_calc.SceneRaycaster()
+    scene = skyratio_calc.SceneRaycaster()
     scene.add_box([0.0, 0.0, 10.0], [5.0, 5.0, 2.0], [0.0, 0.0, 0.0])
     scene.build()
     
-    checker = sky_ratio_calc.SkyRatioChecker()
+    checker = skyratio_calc.SkyRatioChecker()
     checker.set_scene(scene)
     checker.ray_resolution = 10.0
     checker.checkpoints = [[0.0, 0.0, 1.5]]
