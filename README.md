@@ -6,7 +6,7 @@
 
 ## 必要なもの
 
-- Python 3.8以上
+- Python 3.9以上
 - CMake 3.15以上
 - C++コンパイラ (GCC, Clang, MSVCなど)
 

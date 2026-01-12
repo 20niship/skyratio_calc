@@ -7,7 +7,7 @@ name = "sky-ratio-calc"
 version = "0.1.0"
 description = "天空率計算プロジェクト - nanobindサンプル"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     { name = "20niship" }
 ]
