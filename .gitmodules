@@ -1,3 +1,6 @@
 [submodule "src/ext/nanobind"]
 	path = src/ext/nanobind
 	url = https://github.com/wjakob/nanobind.git
+[submodule "src/ext/tinybvh"]
+	path = src/ext/tinybvh
+	url = https://github.com/jbikker/tinybvh.git
