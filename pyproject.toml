@@ -9,7 +9,7 @@ description = "天空率計算プロジェクト - nanobindサンプル"
 readme = "README.md"
 requires-python = ">=3.8"
 authors = [
-    { name = "20niship", email = "" }
+    { name = "20niship" }
 ]
 
 [tool.scikit-build]
