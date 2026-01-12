@@ -6,7 +6,7 @@
 
 class SkyRatioChecker {
 private:
-    SceneRaycaster raycaster;
+    const SceneRaycaster* raycaster = nullptr;
     std::vector<std::tuple<Vec3, Vec3>> generate_rays_from_checkpoint(const Vec3 &checkpoint);
 
 public:

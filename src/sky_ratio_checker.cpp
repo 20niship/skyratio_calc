@@ -50,12 +50,16 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
 }
 
 void SkyRatioChecker::set_scene(const SceneRaycaster &scene) {
-    raycaster = scene;
+    raycaster = &scene;
 }
 
 std::vector<float> SkyRatioChecker::check() {
     std::vector<float> results;
     results.reserve(checkpoints.size());
+    
+    if (!raycaster) {
+        return results;
+    }
     
     for (const auto &checkpoint : checkpoints) {
         auto rays = generate_rays_from_checkpoint(checkpoint);
@@ -71,7 +75,7 @@ std::vector<float> SkyRatioChecker::check() {
         }
         
         // レイキャスト実行
-        auto hit_results = raycaster.raycast(origins, directions);
+        auto hit_results = raycaster->raycast(origins, directions);
         
         // ヒットしなかったレイの数をカウント(=天空が見えている)
         int sky_visible_count = 0;

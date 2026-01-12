@@ -6,6 +6,10 @@
 #define TINYBVH_IMPLEMENTATION
 #include "ext/tinybvh/tiny_bvh.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace {
     // 回転行列を生成(オイラー角から)
     std::array<std::array<double, 3>, 3> euler_to_rotation_matrix(const Vec3 &euler) {
@@ -29,60 +33,77 @@ namespace {
         };
     }
 
-    // レイと球の交差判定
-    bool intersect_ray_sphere(const Vec3 &origin, const Vec3 &direction, 
-                             const Sphere &sphere, double &t) {
-        Vec3 oc = {origin[0] - sphere.center[0], 
-                   origin[1] - sphere.center[1], 
-                   origin[2] - sphere.center[2]};
+    // UV球メッシュを生成
+    void generate_uv_sphere(const Vec3 &center, double radius, int segments, int rings,
+                           std::vector<float> &vertices, std::vector<unsigned int> &indices) {
+        size_t base_idx = vertices.size() / 3;
         
-        double a = direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2];
-        double b = 2.0 * (oc[0] * direction[0] + oc[1] * direction[1] + oc[2] * direction[2]);
-        double c = oc[0] * oc[0] + oc[1] * oc[1] + oc[2] * oc[2] - sphere.radius * sphere.radius;
-        
-        double discriminant = b * b - 4 * a * c;
-        if (discriminant < 0) return false;
-        
-        double sqrt_disc = std::sqrt(discriminant);
-        double t0 = (-b - sqrt_disc) / (2.0 * a);
-        double t1 = (-b + sqrt_disc) / (2.0 * a);
-        
-        if (t0 > 0.0001) {
-            t = t0;
-            return true;
-        }
-        if (t1 > 0.0001) {
-            t = t1;
-            return true;
-        }
-        return false;
-    }
-
-    // レイとAABBの交差判定
-    bool intersect_ray_aabb(const Vec3 &origin, const Vec3 &direction,
-                           const Vec3 &min_bound, const Vec3 &max_bound, double &t) {
-        double tmin = 0.0, tmax = std::numeric_limits<double>::max();
-        
-        for (int i = 0; i < 3; i++) {
-            if (std::abs(direction[i]) < 1e-8) {
-                if (origin[i] < min_bound[i] || origin[i] > max_bound[i])
-                    return false;
-            } else {
-                double t1 = (min_bound[i] - origin[i]) / direction[i];
-                double t2 = (max_bound[i] - origin[i]) / direction[i];
-                if (t1 > t2) std::swap(t1, t2);
-                tmin = std::max(tmin, t1);
-                tmax = std::min(tmax, t2);
-                if (tmin > tmax) return false;
+        // 頂点を生成
+        for (int ring = 0; ring <= rings; ring++) {
+            double phi = M_PI * ring / rings;
+            double sin_phi = std::sin(phi);
+            double cos_phi = std::cos(phi);
+            
+            for (int seg = 0; seg <= segments; seg++) {
+                double theta = 2.0 * M_PI * seg / segments;
+                double sin_theta = std::sin(theta);
+                double cos_theta = std::cos(theta);
+                
+                double x = radius * sin_phi * cos_theta;
+                double y = radius * cos_phi;
+                double z = radius * sin_phi * sin_theta;
+                
+                vertices.push_back(static_cast<float>(center[0] + x));
+                vertices.push_back(static_cast<float>(center[1] + y));
+                vertices.push_back(static_cast<float>(center[2] + z));
             }
         }
         
-        if (tmin > 0.0001) {
-            t = tmin;
-            return true;
+        // インデックスを生成
+        for (int ring = 0; ring < rings; ring++) {
+            for (int seg = 0; seg < segments; seg++) {
+                unsigned int current = static_cast<unsigned int>(base_idx + ring * (segments + 1) + seg);
+                unsigned int next = current + segments + 1;
+                
+                indices.push_back(current);
+                indices.push_back(next);
+                indices.push_back(current + 1);
+                
+                indices.push_back(current + 1);
+                indices.push_back(next);
+                indices.push_back(next + 1);
+            }
         }
-        return false;
     }
+}
+
+SceneRaycaster::~SceneRaycaster() {
+    delete bvh;
+}
+
+SceneRaycaster::SceneRaycaster(SceneRaycaster&& other) noexcept
+    : build_dirty(other.build_dirty),
+      boxes(std::move(other.boxes)),
+      spheres(std::move(other.spheres)),
+      vertices(std::move(other.vertices)),
+      indices(std::move(other.indices)),
+      bvh(other.bvh) {
+    other.bvh = nullptr;
+}
+
+SceneRaycaster& SceneRaycaster::operator=(SceneRaycaster&& other) noexcept {
+    if (this != &other) {
+        delete bvh;
+        
+        build_dirty = other.build_dirty;
+        boxes = std::move(other.boxes);
+        spheres = std::move(other.spheres);
+        vertices = std::move(other.vertices);
+        indices = std::move(other.indices);
+        bvh = other.bvh;
+        other.bvh = nullptr;
+    }
+    return *this;
 }
 
 void SceneRaycaster::clear() {
@@ -90,6 +111,8 @@ void SceneRaycaster::clear() {
     spheres.clear();
     vertices.clear();
     indices.clear();
+    delete bvh;
+    bvh = nullptr;
     build_dirty = true;
 }
 
@@ -104,9 +127,8 @@ void SceneRaycaster::add_sphere(const Vec3 &center, double radius) {
 }
 
 void SceneRaycaster::add_mesh(const std::vector<Vec3> &mesh_vertices) {
-    // 頂点数が3の倍数であることを確認
     if (mesh_vertices.size() % 3 != 0) {
-        return; // 無効なメッシュは無視
+        return;
     }
     
     size_t base_idx = vertices.size() / 3;
@@ -117,7 +139,6 @@ void SceneRaycaster::add_mesh(const std::vector<Vec3> &mesh_vertices) {
         vertices.push_back(static_cast<float>(v[2]));
     }
     
-    // 三角形として登録
     for (size_t i = 0; i < mesh_vertices.size() / 3; i++) {
         indices.push_back(static_cast<unsigned int>(base_idx + i * 3));
         indices.push_back(static_cast<unsigned int>(base_idx + i * 3 + 1));
@@ -133,7 +154,6 @@ void SceneRaycaster::build() {
         auto rot_mat = euler_to_rotation_matrix(box.euler);
         Vec3 half_size = {box.size[0] / 2, box.size[1] / 2, box.size[2] / 2};
         
-        // ボックスの8頂点
         std::vector<Vec3> corners(8);
         for (int i = 0; i < 8; i++) {
             Vec3 local = {
@@ -149,14 +169,13 @@ void SceneRaycaster::build() {
             };
         }
         
-        // ボックスの12三角形(6面 × 2三角形)
         std::vector<std::array<int, 3>> faces = {
-            {0,1,2}, {2,1,3}, // 前
-            {4,6,5}, {5,6,7}, // 後
-            {0,2,4}, {4,2,6}, // 左
-            {1,5,3}, {3,5,7}, // 右
-            {0,4,1}, {1,4,5}, // 下
-            {2,3,6}, {6,3,7}  // 上
+            {0,1,2}, {2,1,3},
+            {4,6,5}, {5,6,7},
+            {0,2,4}, {4,2,6},
+            {1,5,3}, {3,5,7},
+            {0,4,1}, {1,4,5},
+            {2,3,6}, {6,3,7}
         };
         
         size_t base_idx = vertices.size() / 3;
@@ -173,18 +192,13 @@ void SceneRaycaster::build() {
         }
     }
     
-    build_dirty = false;
-}
-
-std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3> &origins, 
-                                                const std::vector<Vec3> &directions) {
-    if (build_dirty) build();
+    // 球をUV球メッシュに変換
+    for (const auto &sphere : spheres) {
+        generate_uv_sphere(sphere.center, sphere.radius, 16, 8, vertices, indices);
+    }
     
-    std::vector<HitResult> results(origins.size());
-    
-    // BVHを使用する場合(メッシュがある場合)
+    // BVHを構築
     if (!vertices.empty() && !indices.empty()) {
-        // インデックスを使って三角形頂点配列を作成
         std::vector<tinybvh::bvhvec4> triangles;
         triangles.reserve(indices.size());
         
@@ -195,49 +209,67 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3> &origins,
             ));
         }
         
-        tinybvh::BVH bvh;
-        bvh.Build(triangles.data(), triangles.size() / 3);
+        delete bvh;
+        bvh = new tinybvh::BVH();
+        bvh->Build(triangles.data(), triangles.size() / 3);
+    }
+    
+    build_dirty = false;
+}
+
+std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3> &origins, 
+                                                const std::vector<Vec3> &directions) const {
+    // build_dirtyの場合は、constメソッドなのでビルドできない
+    // 呼び出し側でbuild()を事前に呼ぶ必要がある
+    
+    std::vector<HitResult> results(origins.size());
+    
+    if (!bvh || origins.empty()) {
+        return results;
+    }
+    
+    // レイを準備
+    std::vector<tinybvh::Ray> rays;
+    rays.reserve(origins.size());
+    for (size_t i = 0; i < origins.size(); i++) {
+        rays.emplace_back(
+            tinybvh::bvhvec3(static_cast<float>(origins[i][0]), 
+                            static_cast<float>(origins[i][1]), 
+                            static_cast<float>(origins[i][2])),
+            tinybvh::bvhvec3(static_cast<float>(directions[i][0]), 
+                            static_cast<float>(directions[i][1]), 
+                            static_cast<float>(directions[i][2]))
+        );
+    }
+    
+    // 256レイずつバッチ処理
+    const size_t batch_size = 256;
+    const size_t num_batches = (rays.size() + batch_size - 1) / batch_size;
+    
+    for (size_t batch = 0; batch < num_batches; batch++) {
+        size_t start = batch * batch_size;
+        size_t end = std::min(start + batch_size, rays.size());
+        size_t count = end - start;
         
-        for (size_t i = 0; i < origins.size(); i++) {
-            tinybvh::Ray ray(
-                tinybvh::bvhvec3(static_cast<float>(origins[i][0]), 
-                                 static_cast<float>(origins[i][1]), 
-                                 static_cast<float>(origins[i][2])),
-                tinybvh::bvhvec3(static_cast<float>(directions[i][0]), 
-                                 static_cast<float>(directions[i][1]), 
-                                 static_cast<float>(directions[i][2]))
-            );
-            
-            bvh.Intersect(ray);
-            
-            if (ray.hit.t < 1e30f) {
-                results[i].hit = true;
-                results[i].distance = ray.hit.t;
-                results[i].position[0] = origins[i][0] + directions[i][0] * ray.hit.t;
-                results[i].position[1] = origins[i][1] + directions[i][1] * ray.hit.t;
-                results[i].position[2] = origins[i][2] + directions[i][2] * ray.hit.t;
+        if (count == batch_size) {
+            // フルバッチの場合は最適化版を使用
+            bvh->Intersect256Rays(&rays[start]);
+        } else {
+            // 部分バッチの場合は個別に処理
+            for (size_t i = start; i < end; i++) {
+                bvh->Intersect(rays[i]);
             }
         }
     }
     
-    // 球との交差判定
-    for (size_t i = 0; i < origins.size(); i++) {
-        double closest_t = results[i].hit ? results[i].distance : std::numeric_limits<double>::max();
-        bool hit_sphere = false;
-        
-        for (const auto &sphere : spheres) {
-            double t;
-            if (intersect_ray_sphere(origins[i], directions[i], sphere, t)) {
-                if (t < closest_t) {
-                    closest_t = t;
-                    hit_sphere = true;
-                    results[i].hit = true;
-                    results[i].distance = t;
-                    results[i].position[0] = origins[i][0] + directions[i][0] * t;
-                    results[i].position[1] = origins[i][1] + directions[i][1] * t;
-                    results[i].position[2] = origins[i][2] + directions[i][2] * t;
-                }
-            }
+    // 結果を変換
+    for (size_t i = 0; i < rays.size(); i++) {
+        if (rays[i].hit.t < 1e30f) {
+            results[i].hit = true;
+            results[i].distance = rays[i].hit.t;
+            results[i].position[0] = origins[i][0] + directions[i][0] * rays[i].hit.t;
+            results[i].position[1] = origins[i][1] + directions[i][1] * rays[i].hit.t;
+            results[i].position[2] = origins[i][2] + directions[i][2] * rays[i].hit.t;
         }
     }
     
