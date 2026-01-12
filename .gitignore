@@ -66,3 +66,6 @@ Makefile
 
 # CodeQL
 _codeql_build_dir/
+
+.clangd
+.cache

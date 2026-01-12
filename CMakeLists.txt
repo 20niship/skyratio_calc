@@ -5,6 +5,8 @@ project(sky_ratio_calc)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Python開発環境を検索
 find_package(Python 3.9 COMPONENTS Interpreter Development.Module REQUIRED)
 
