@@ -61,4 +61,3 @@ if __name__ == "__main__":
     test_scene_raycaster()
     test_sky_ratio_checker()
     print("\nすべてのテストが成功しました！")
-
