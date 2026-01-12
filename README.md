@@ -81,6 +81,30 @@ for i, ratio in enumerate(sky_ratios):
 
 詳細なサンプルは `test/sample_python.py` を参照してください。
 
+### Pure Python実装
+
+C++バインディングを使わない純粋なPython実装も提供しています（学習・テスト用途）：
+
+```python
+from test.python_implementation import SceneRaycasterPython, SkyRatioCheckerPython
+
+# シーンの作成
+scene = SceneRaycasterPython()
+scene.add_box([5.0, 0.0, 5.0], [2.0, 2.0, 4.0])
+scene.build()
+
+# 天空率チェッカーの作成
+checker = SkyRatioCheckerPython()
+checker.set_scene(scene)
+checker.ray_resolution = 5.0
+checker.checkpoints = [[0.0, 0.0, 1.5]]
+
+# 天空率を計算
+sky_ratios = checker.check()
+```
+
+**注意**: Pure Python実装はC++実装より約18-20倍遅いため、実用用途ではC++バインディングの使用を推奨します。
+
 ### C++
 
 ```cpp
@@ -158,6 +182,44 @@ C++サンプルの実行：
 - `check()`: 各測定点の天空率を計算
 
 天空率は、測定点から半球状にレイを飛ばし、障害物に当たらないレイの割合として計算されます。
+
+## パフォーマンス比較
+
+このプロジェクトでは、C++実装（Pythonバインディング経由）と純粋なPython実装の両方を提供しています。以下は、両実装の性能比較結果です。
+
+### ベンチマークの実行方法
+
+```bash
+cd test
+python benchmark.py
+```
+
+ベンチマークを実行すると、`benchmark_rectangles.png` と `benchmark_checkpoints.png` がリポジトリのルートディレクトリに生成されます。
+
+### ベンチマーク設定
+
+長方形が1〜10個集まった形状について、複数の測定点（10〜300点）をもとに天空率を計算し、実行時間を比較しました。レイの角度刻みは10度に設定しています。
+
+### 比較1: 長方形の数と計算時間
+
+100個の測定点を使用し、長方形の数を1〜10個まで変化させた場合の計算時間の比較：
+
+![長方形の数と計算時間の比較](benchmark_rectangles.png)
+
+### 比較2: 測定点の数と計算時間
+
+5個の長方形を使用し、測定点の数を10〜300個まで変化させた場合の計算時間の比較：
+
+![測定点の数と計算時間の比較](benchmark_checkpoints.png)
+
+### 結果まとめ
+
+- **C++実装**: 高速な実行速度を実現。tiny_bvhライブラリを使用した最適化されたレイキャストにより、大規模なシーンでも高速に処理可能
+- **Python実装**: 約**18〜20倍遅い**ですが、依存関係が少なく、シンプルな実装で理解しやすい
+- **長方形の数**: 両実装ともほぼ線形に計算時間が増加
+- **測定点の数**: 両実装とも測定点の数に比例して計算時間が増加
+
+実用的な用途では、C++実装（Pythonバインディング経由）の使用を推奨します。Python実装は学習や小規模なテスト用途に適しています。
 
 ## License
 
