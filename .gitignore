@@ -63,3 +63,6 @@ CMakeFiles/
 cmake_install.cmake
 Makefile
 *.cmake
+
+# CodeQL
+_codeql_build_dir/
