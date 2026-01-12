@@ -183,25 +183,23 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3> &origins,
         bvh.Build(reinterpret_cast<tinybvh::bvhvec4*>(vertices.data()), vertices.size() / 3);
         
         for (size_t i = 0; i < origins.size(); i++) {
-            tinybvh::Ray ray;
-            ray.O = tinybvh::bvhvec3(static_cast<float>(origins[i][0]), 
-                                     static_cast<float>(origins[i][1]), 
-                                     static_cast<float>(origins[i][2]));
-            ray.D = tinybvh::bvhvec3(static_cast<float>(directions[i][0]), 
-                                     static_cast<float>(directions[i][1]), 
-                                     static_cast<float>(directions[i][2]));
-            ray.t = 1e30f;
+            tinybvh::Ray ray(
+                tinybvh::bvhvec3(static_cast<float>(origins[i][0]), 
+                                 static_cast<float>(origins[i][1]), 
+                                 static_cast<float>(origins[i][2])),
+                tinybvh::bvhvec3(static_cast<float>(directions[i][0]), 
+                                 static_cast<float>(directions[i][1]), 
+                                 static_cast<float>(directions[i][2]))
+            );
             
-            bvh.Intersect(ray, reinterpret_cast<tinybvh::bvhvec4*>(vertices.data()));
+            bvh.Intersect(ray);
             
-            if (ray.t < 1e30f) {
+            if (ray.hit.t < 1e30f) {
                 results[i].hit = true;
-                results[i].distance = ray.t;
-                results[i].position = {
-                    origins[i][0] + directions[i][0] * ray.t,
-                    origins[i][1] + directions[i][1] * ray.t,
-                    origins[i][2] + directions[i][2] * ray.t
-                };
+                results[i].distance = ray.hit.t;
+                results[i].position[0] = origins[i][0] + directions[i][0] * ray.hit.t;
+                results[i].position[1] = origins[i][1] + directions[i][1] * ray.hit.t;
+                results[i].position[2] = origins[i][2] + directions[i][2] * ray.hit.t;
             }
         }
     }
@@ -219,11 +217,9 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3> &origins,
                     hit_sphere = true;
                     results[i].hit = true;
                     results[i].distance = t;
-                    results[i].position = {
-                        origins[i][0] + directions[i][0] * t,
-                        origins[i][1] + directions[i][1] * t,
-                        origins[i][2] + directions[i][2] * t
-                    };
+                    results[i].position[0] = origins[i][0] + directions[i][0] * t;
+                    results[i].position[1] = origins[i][1] + directions[i][1] * t;
+                    results[i].position[2] = origins[i][2] + directions[i][2] * t;
                 }
             }
         }
