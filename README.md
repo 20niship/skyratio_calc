@@ -224,6 +224,30 @@ C++サンプルの実行：
 
 天空率は、測定点から半球状にレイを飛ばし、障害物に当たらないレイの割合として計算されます。
 
+### パフォーマンス最適化
+
+このライブラリは、内部で[tiny_bvh](https://github.com/jbikker/tinybvh)を使用して高速なレイキャストを実現しています。tiny_bvhは以下の最適化機能を提供しています：
+
+#### BVH構築の最適化
+
+現在の実装では、標準的なBVH（Bounding Volume Hierarchy）を使用していますが、tiny_bvhは以下の高度なBVH形式もサポートしています：
+
+- **BVH** (デフォルト): 標準的な32バイトノード形式。バランスの取れた性能。
+- **BVH_SoA**: SIMD最適化に適した構造体配列形式。トラバーサルが高速。
+- **BVH4_CPU / BVH8_CPU**: 4方向/8方向の広いBVH。発散したレイに対して高速（AVX2必要）。
+- **BVH_GPU / BVH4_GPU**: GPU向けの最適化形式。OpenCLによるGPUレンダリング用。
+- **BVH8_CWBVH**: 圧縮された8方向BVH。最先端のGPUレンダリング用。
+
+現在の実装ではCPUでの計算に最適化されており、標準的なBVHを使用しています。将来的に、より高度な最適化や、OpenCLを使用したGPU加速を実装する可能性があります。
+
+#### マルチスレッド対応
+
+C++実装では、複数のレイを同時に処理することでマルチコア環境で高速化が可能です。現在の実装では256レイずつバッチ処理を行っています。
+
+#### メモリ最適化
+
+tiny_bvhは、キャッシュラインに整列されたメモリレイアウトを使用し、メモリアクセスを最適化しています。
+
 ## パフォーマンス比較
 
 このプロジェクトでは、C++実装（Pythonバインディング経由）と純粋なPython実装の両方を提供しています。以下は、両実装の性能比較結果です。
@@ -296,6 +320,131 @@ python benchmark.py
 - **測定点の数**: 両実装とも測定点の数に比例して計算時間が増加
 
 実用的な用途では、C++実装（Pythonバインディング経由）の使用を推奨します。Python実装は学習や小規模なテスト用途に適しています。
+
+## 開発者向け情報
+
+### 型チェックとコード補完
+
+このプロジェクトでは、IDEでの型チェックとコード補完を有効にするために、スタブファイル（.pyi）を提供しています。
+
+スタブファイルを生成するには：
+
+```bash
+python generate_stubs.py
+```
+
+これにより、`sky_ratio_calc.pyi` ファイルが生成され、PyCharm、VS Code、mypyなどのツールで型チェックが可能になります。
+
+### コードスタイルとLint
+
+このプロジェクトでは、Pythonコードのスタイルチェックに[flake8](https://flake8.pycqa.org/)を使用しています。
+
+```bash
+# flake8のインストール
+pip install flake8
+
+# コードスタイルチェック
+flake8 . --max-line-length=88 --exclude=./build,./src/ext
+```
+
+### 継続的インテグレーション（CI）
+
+GitHub Actionsを使用して、以下の自動テストを実行しています：
+
+- **ビルドとテスト** (`.github/workflows/test.yml`): Python 3.9〜3.12でのビルドと機能テスト
+- **Lintチェック** (`.github/workflows/lint.yml`): Pythonコードのスタイルチェックと型チェック
+
+プルリクエストを作成すると、これらのチェックが自動的に実行されます。
+
+## トラブルシューティング
+
+### ビルドエラー
+
+**問題**: `CMake Error: Could not find CMAKE_ROOT`
+
+**解決策**: CMakeがインストールされていることを確認してください。
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install cmake
+
+# macOS
+brew install cmake
+
+# Windows
+# https://cmake.org/download/ からインストーラーをダウンロード
+```
+
+**問題**: `fatal error: Python.h: No such file or directory`
+
+**解決策**: Python開発ヘッダーがインストールされていることを確認してください。
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install python3-dev
+
+# macOS (通常は不要)
+# Windows (通常は不要)
+```
+
+**問題**: submoduleがクローンされていない
+
+**解決策**: submoduleを初期化してください。
+
+```bash
+git submodule update --init --recursive
+```
+
+### インポートエラー
+
+**問題**: `ImportError: No module named 'sky_ratio_calc'`
+
+**解決策**: パッケージがインストールされていることを確認してください。
+
+```bash
+pip install -e .  # 開発モードでインストール
+```
+
+### パフォーマンスに関する質問
+
+**質問**: より高速な計算は可能ですか？
+
+**回答**: はい、以下の方法で高速化できます：
+
+1. **レイの解像度を調整**: `ray_resolution`を大きくすると精度は下がりますが、計算が速くなります。
+   ```python
+   checker.ray_resolution = 10.0  # 10度刻み（デフォルトは1.0度）
+   ```
+
+2. **測定点をバッチ処理**: 複数の測定点を一度に処理すると、BVHの再利用により効率的です。
+
+3. **C++実装を使用**: Pure Python実装の代わりに、C++バインディング（デフォルト）を使用してください。約18倍高速です。
+
+**質問**: GPU加速は利用できますか？
+
+**回答**: 現在の実装はCPU最適化されていますが、tiny_bvhライブラリはOpenCLを使用したGPUレンダリングをサポートしています。将来的なバージョンでGPU加速のサポートを追加する可能性があります。
+
+GPU加速に興味がある場合は、[tiny_bvh GPUサンプル](https://github.com/jbikker/tinybvh/blob/master/tiny_bvh_gpu.cpp)を参照するか、GitHubでissueを作成してください。
+
+## 貢献
+
+バグ報告や機能リクエストは、[GitHub Issues](https://github.com/20niship/sky-ratio-calc/issues)で受け付けています。
+
+プルリクエストも歓迎します！以下の手順に従ってください：
+
+1. このリポジトリをフォーク
+2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
+
+コードを提出する前に、lintチェックとテストが通ることを確認してください。
+
+## 関連リンク
+
+- [tiny_bvh](https://github.com/jbikker/tinybvh) - 高速BVH構築とトラバーサルライブラリ
+- [nanobind](https://github.com/wjakob/nanobind) - C++/Pythonバインディングライブラリ
+- [天空率の計算方法について](https://www.mlit.go.jp/jutakukentiku/build/jutakukentiku_house_tk_000092.html) - 国土交通省の説明
 
 ## License
 
