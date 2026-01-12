@@ -1,0 +1,3 @@
+[submodule "src/ext/nanobind"]
+	path = src/ext/nanobind
+	url = https://github.com/wjakob/nanobind.git
