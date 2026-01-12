@@ -25,34 +25,34 @@ def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 
     """
     # ボックスを持つシーンを作成
     scene = sky_ratio_calc.SceneRaycaster()
-    
+
     for i in range(num_boxes):
         # 異なる位置にボックスを追加
         x = (i % 5) * 5.0 - 10.0
         y = (i // 5) * 5.0 - 10.0
         scene.add_box([x, y, 5.0], [2.0, 2.0, 4.0], [0.0, 0.0, 0.0])
-    
+
     scene.build()
-    
+
     # 複数の測定点を持つチェッカーを作成
     checker = sky_ratio_calc.SkyRatioChecker()
     checker.set_scene(scene)
     checker.ray_resolution = ray_resolution
-    
+
     # 測定点を生成
     checkpoints = []
     for i in range(num_checkpoints):
         x = (i % 10) * 2.0 - 10.0
         y = (i // 10) * 2.0 - 10.0
         checkpoints.append([x, y, 1.5])
-    
+
     checker.checkpoints = checkpoints
-    
-    # 時間を計測
+
+    # 時間を計測（結果の値は使用せず、実行時間のみを測定）
     start_time = time.time()
-    sky_ratios = checker.check()
+    _ = checker.check()
     end_time = time.time()
-    
+
     return end_time - start_time
 
 
@@ -63,34 +63,34 @@ def benchmark_python(num_boxes: int, num_checkpoints: int, ray_resolution: float
     """
     # ボックスを持つシーンを作成
     scene = SceneRaycasterPython()
-    
+
     for i in range(num_boxes):
         # 異なる位置にボックスを追加
         x = (i % 5) * 5.0 - 10.0
         y = (i // 5) * 5.0 - 10.0
         scene.add_box([x, y, 5.0], [2.0, 2.0, 4.0], [0.0, 0.0, 0.0])
-    
+
     scene.build()
-    
+
     # 複数の測定点を持つチェッカーを作成
     checker = SkyRatioCheckerPython()
     checker.set_scene(scene)
     checker.ray_resolution = ray_resolution
-    
+
     # 測定点を生成
     checkpoints = []
     for i in range(num_checkpoints):
         x = (i % 10) * 2.0 - 10.0
         y = (i // 10) * 2.0 - 10.0
         checkpoints.append([x, y, 1.5])
-    
+
     checker.checkpoints = checkpoints
-    
-    # 時間を計測
+
+    # 時間を計測（結果の値は使用せず、実行時間のみを測定）
     start_time = time.time()
-    sky_ratios = checker.check()
+    _ = checker.check()
     end_time = time.time()
-    
+
     return end_time - start_time
 
 
@@ -188,28 +188,58 @@ def benchmark_comparison_2():
 
 def print_summary(boxes_data, checkpoints_data):
     """サマリー統計を出力"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("ベンチマーク結果サマリー")
-    print("="*70)
-    
+    print("=" * 70)
+
     num_boxes_list, cpp_times_1, python_times_1 = boxes_data
     num_checkpoints_list, cpp_times_2, python_times_2 = checkpoints_data
-    
+
     # ベンチマーク1のサマリー
     avg_speedup_1 = np.mean([p / c for p, c in zip(python_times_1, cpp_times_1)])
     print("\nベンチマーク1（長方形の数を変化）:")
     print(f"  平均C++時間: {np.mean(cpp_times_1):.4f}秒")
     print(f"  平均Python時間: {np.mean(python_times_1):.4f}秒")
     print(f"  平均高速化倍率（Python/C++）: {avg_speedup_1:.2f}x")
-    
+
     # ベンチマーク2のサマリー
     avg_speedup_2 = np.mean([p / c for p, c in zip(python_times_2, cpp_times_2)])
     print("\nベンチマーク2（測定点の数を変化）:")
     print(f"  平均C++時間: {np.mean(cpp_times_2):.4f}秒")
     print(f"  平均Python時間: {np.mean(python_times_2):.4f}秒")
     print(f"  平均高速化倍率（Python/C++）: {avg_speedup_2:.2f}x")
+
+    print("\n" + "=" * 70)
+
+
+def generate_markdown_tables(boxes_data, checkpoints_data):
+    """Markdown形式の表を生成してREADME用のテキストを返す"""
+    num_boxes_list, cpp_times_1, python_times_1 = boxes_data
+    num_checkpoints_list, cpp_times_2, python_times_2 = checkpoints_data
     
-    print("\n" + "="*70)
+    # ベンチマーク1の表
+    table1 = "\n### ベンチマーク1: 長方形の数と計算時間\n\n"
+    table1 += "| 長方形の数 | C++実装 (秒) | Python実装 (秒) | 高速化倍率 |\n"
+    table1 += "|-----------|-------------|----------------|----------|\n"
+    for i, num_boxes in enumerate(num_boxes_list):
+        speedup = python_times_1[i] / cpp_times_1[i]
+        table1 += f"| {num_boxes} | {cpp_times_1[i]:.4f} | {python_times_1[i]:.4f} | {speedup:.2f}x |\n"
+    
+    avg_speedup_1 = np.mean([p / c for p, c in zip(python_times_1, cpp_times_1)])
+    table1 += f"\n**平均高速化倍率**: {avg_speedup_1:.2f}x\n"
+    
+    # ベンチマーク2の表
+    table2 = "\n### ベンチマーク2: 測定点の数と計算時間\n\n"
+    table2 += "| 測定点の数 | C++実装 (秒) | Python実装 (秒) | 高速化倍率 |\n"
+    table2 += "|-----------|-------------|----------------|----------|\n"
+    for i, num_checkpoints in enumerate(num_checkpoints_list):
+        speedup = python_times_2[i] / cpp_times_2[i]
+        table2 += f"| {num_checkpoints} | {cpp_times_2[i]:.4f} | {python_times_2[i]:.4f} | {speedup:.2f}x |\n"
+    
+    avg_speedup_2 = np.mean([p / c for p, c in zip(python_times_2, cpp_times_2)])
+    table2 += f"\n**平均高速化倍率**: {avg_speedup_2:.2f}x\n"
+    
+    return table1 + table2
 
 
 def main():
@@ -223,6 +253,13 @@ def main():
     
     # サマリーを出力
     print_summary(boxes_data, checkpoints_data)
+
+    # Markdown表を生成して表示
+    markdown_tables = generate_markdown_tables(boxes_data, checkpoints_data)
+    print("\n" + "=" * 70)
+    print("README用のMarkdown表:")
+    print("=" * 70)
+    print(markdown_tables)
 
 
 if __name__ == "__main__":

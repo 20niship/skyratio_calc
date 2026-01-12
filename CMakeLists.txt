@@ -31,3 +31,6 @@ nanobind_add_module(sky_ratio_calc
 # インストール設定
 install(TARGETS sky_ratio_calc LIBRARY DESTINATION .)
 install(TARGETS sample_cpp RUNTIME DESTINATION .)
+
+# スタブファイルのインストール
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/sky_ratio_calc.pyi DESTINATION .)
