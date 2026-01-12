@@ -1,0 +1,19 @@
+[build-system]
+requires = ["scikit-build-core", "nanobind"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "sky-ratio-calc"
+version = "0.1.0"
+description = "天空率計算プロジェクト - nanobindサンプル"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "20niship" }
+]
+
+[tool.scikit-build]
+minimum-version = "0.4"
+build-dir = "build/{wheel_tag}"
+cmake.verbose = true
+logging.level = "INFO"
