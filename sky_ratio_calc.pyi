@@ -6,30 +6,6 @@
 
 from typing import List
 
-def add(a: int, b: int) -> int:
-    """
-    2つの整数を加算する
-    
-    Args:
-        a: 1つ目の整数
-        b: 2つ目の整数
-        
-    Returns:
-        a + b の結果
-    """
-    ...
-
-def greet(name: str) -> str:
-    """
-    名前から挨拶文字列を生成する
-    
-    Args:
-        name: 挨拶する相手の名前
-        
-    Returns:
-        挨拶文字列（"Hello, {name}!"の形式）
-    """
-    ...
 
 class HitResult:
     """
