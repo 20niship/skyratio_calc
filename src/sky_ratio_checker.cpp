@@ -74,19 +74,50 @@ std::vector<float> SkyRatioChecker::check() {
             directions.push_back(std::get<1>(ray));
         }
         
-        // レイキャスト実行
+        // レイキャスト実行（一度だけ）
         auto hit_results = raycaster->raycast(origins, directions);
         
-        // ヒットしなかったレイの数をカウント(=天空が見えている)
-        int sky_visible_count = 0;
-        for (const auto &result : hit_results) {
-            if (!result.hit) {
-                sky_visible_count++;
+        // 積分計算による天空率の計算
+        double resolution_rad = ray_resolution * M_PI / 180.0;
+        
+        int theta_steps = static_cast<int>(90.0 / ray_resolution);
+        int phi_steps = static_cast<int>(360.0 / ray_resolution);
+        if (phi_steps < 1) phi_steps = 1;
+        
+        // 空が見える部分の投影面積を計算
+        double sky_area = 0.0;
+        int ray_index = 0;
+        
+        for (int t = 0; t <= theta_steps; t++) {
+            // レイの角度に対応するセルの範囲を計算
+            double theta_start = t * resolution_rad;
+            double theta_end = (t + 1) * resolution_rad;
+            if (theta_end > M_PI / 2.0) theta_end = M_PI / 2.0;
+            
+            int current_phi_steps = (t == 0) ? 1 : phi_steps;
+            
+            // このthetaセルの投影面積の重み（phi方向の積分なし）
+            double theta_area = (std::sin(theta_end) * std::sin(theta_end) - 
+                               std::sin(theta_start) * std::sin(theta_start)) / 2.0;
+            
+            for (int p = 0; p < current_phi_steps; p++) {
+                if (ray_index < hit_results.size() && !hit_results[ray_index].hit) {
+                    if (t == 0) {
+                        // 天頂の場合は全周（2π）を代表
+                        sky_area += theta_area * 2.0 * M_PI;
+                    } else {
+                        // 通常のセルは dPhi の範囲を代表
+                        double dPhi = 2.0 * M_PI / phi_steps;
+                        sky_area += theta_area * dPhi;
+                    }
+                }
+                ray_index++;
             }
         }
         
-        // 天空率を計算
-        float sky_ratio = static_cast<float>(sky_visible_count) / static_cast<float>(rays.size());
+        // 全天の投影面積はπ（半径1の円）
+        double total_area = M_PI;
+        float sky_ratio = static_cast<float>(sky_area / total_area);
         results.push_back(sky_ratio);
     }
     

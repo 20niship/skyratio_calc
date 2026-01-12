@@ -213,15 +213,51 @@ class SkyRatioCheckerPython:
             checkpoint = Vec3.from_list(checkpoint_list)
             rays = self.generate_rays_from_checkpoint(checkpoint)
             
-            # 何にもヒットしないレイ（天空が見える）をカウント
-            sky_visible_count = 0
+            # レイキャスト実行（一度だけ）
+            hit_results = []
             for origin, direction in rays:
                 hit, _ = self.scene.raycast_single(origin, direction)
-                if not hit:
-                    sky_visible_count += 1
+                hit_results.append(hit)
             
-            # 天空率を計算
-            sky_ratio = sky_visible_count / len(rays) if rays else 0.0
+            # 積分計算による天空率の計算
+            resolution_rad = self.ray_resolution * math.pi / 180.0
+            
+            theta_steps = int(90.0 / self.ray_resolution)
+            phi_steps = int(360.0 / self.ray_resolution)
+            if phi_steps < 1:
+                phi_steps = 1
+            
+            # 空が見える部分の投影面積を計算
+            sky_area = 0.0
+            ray_index = 0
+            
+            for t in range(theta_steps + 1):
+                # レイの角度に対応するセルの範囲を計算
+                theta_start = t * resolution_rad
+                theta_end = (t + 1) * resolution_rad
+                if theta_end > math.pi / 2.0:
+                    theta_end = math.pi / 2.0
+                
+                current_phi_steps = 1 if t == 0 else phi_steps
+                
+                # このthetaセルの投影面積の重み（phi方向の積分なし）
+                theta_area = (math.sin(theta_end) ** 2 - 
+                            math.sin(theta_start) ** 2) / 2.0
+                
+                for p in range(current_phi_steps):
+                    if ray_index < len(hit_results) and not hit_results[ray_index]:
+                        if t == 0:
+                            # 天頂の場合は全周（2π）を代表
+                            sky_area += theta_area * 2.0 * math.pi
+                        else:
+                            # 通常のセルは dPhi の範囲を代表
+                            d_phi = 2.0 * math.pi / phi_steps
+                            sky_area += theta_area * d_phi
+                    ray_index += 1
+            
+            # 全天の投影面積はπ（半径1の円）
+            total_area = math.pi
+            sky_ratio = sky_area / total_area if total_area > 0 else 0.0
             results.append(sky_ratio)
         
         return results
