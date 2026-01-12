@@ -1,14 +1,14 @@
 """
 天空率計算のPythonサンプル
 """
-import sky_ratio_calc
+import skyratio_calc
 
 
 def main():
     print("=== 天空率計算サンプル (Python) ===\n")
 
     # シーンの作成
-    scene = sky_ratio_calc.SceneRaycaster()
+    scene = skyratio_calc.SceneRaycaster()
 
     # 建物を追加(ボックス)
     scene.add_box([5.0, 0.0, 0.0], [2.0, 2.0, 10.0], [0.0, 0.0, 0.0])
@@ -22,7 +22,7 @@ def main():
     print("シーンを構築しました")
 
     # 天空率チェッカーの作成
-    checker = sky_ratio_calc.SkyRatioChecker()
+    checker = skyratio_calc.SkyRatioChecker()
     checker.set_scene(scene)
     checker.ray_resolution = 5.0  # 5度刻み
 

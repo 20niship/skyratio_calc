@@ -9,7 +9,7 @@
 namespace nb = nanobind;
 
 // Pythonモジュールの定義
-NB_MODULE(sky_ratio_calc, m) {
+NB_MODULE(skyratio_calc, m) {
   m.doc() = "天空率計算プロジェクト";
 
   // HitResult構造体

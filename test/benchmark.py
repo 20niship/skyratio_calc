@@ -11,7 +11,7 @@ import time
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import sky_ratio_calc
+import skyratio_calc
 from python_implementation import SceneRaycasterPython, SkyRatioCheckerPython
 
 
@@ -25,7 +25,7 @@ def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 
     戻り値: 実行時間（秒）
     """
     # ボックスを持つシーンを作成
-    scene = sky_ratio_calc.SceneRaycaster()
+    scene = skyratio_calc.SceneRaycaster()
 
     for i in range(num_boxes):
         # 異なる位置にボックスを追加
@@ -36,7 +36,7 @@ def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 
     scene.build()
 
     # 複数の測定点を持つチェッカーを作成
-    checker = sky_ratio_calc.SkyRatioChecker()
+    checker = skyratio_calc.SkyRatioChecker()
     checker.set_scene(scene)
     checker.ray_resolution = ray_resolution
 

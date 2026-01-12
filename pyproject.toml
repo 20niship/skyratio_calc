@@ -3,9 +3,9 @@ requires = ["scikit-build-core", "nanobind"]
 build-backend = "scikit_build_core.build"
 
 [project]
-name = "sky-ratio-calc"
+name = "skyratio_calc"
 version = "0.1.0"
-description = "天空率計算プロジェクト - nanobindサンプル"
+description = "天空率計算"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [

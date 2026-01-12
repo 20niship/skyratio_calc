@@ -1,4 +1,4 @@
-# sky-ratio-calc
+# skyratio_calc
 
 天空率計算プロジェクト
 
@@ -20,45 +20,33 @@
 
 ```bash
 # GitHubリポジトリから直接インストール
-pip install git+https://github.com/20niship/sky-ratio-calc.git
+pip install git+https://github.com/20niship/skyratio_calc.git
 ```
-
-特定のブランチやタグを指定する場合：
-
-```bash
-# ブランチを指定
-pip install git+https://github.com/20niship/sky-ratio-calc.git@main
-
-# タグを指定
-pip install git+https://github.com/20niship/sky-ratio-calc.git@v0.1.0
-```
-
 #### uvを使用する場合
 
 [uv](https://github.com/astral-sh/uv)は高速なPythonパッケージマネージャーです。
 
 ```bash
 # uvでインストール
-uv pip install git+https://github.com/20niship/sky-ratio-calc.git
-
-# または、pyproject.tomlに依存関係として追加
-# [project]
-# dependencies = [
-#     "sky-ratio-calc @ git+https://github.com/20niship/sky-ratio-calc.git",
-# ]
-
-# その後、以下のコマンドでインストール
-uv pip install -e .
+uv pip install git+https://github.com/20niship/skyratio_calc.git
 ```
 
-**注意**: GitHubから直接インストールする場合、ビルドに必要な依存関係（CMake、C++コンパイラ）が事前にシステムにインストールされている必要があります。
+または、pyproject.tomlに依存関係として追加し、uv syncでインストール
+```bash
+# [project]
+# dependencies = [
+#     "skyratio_calc @ git+https://github.com/20niship/skyratio_calc.git",
+# ]
+
+uv sync
+```
 
 ### 開発環境でのインストール
 
 ```bash
 # submoduleを含めてクローン
-git clone --recursive https://github.com/20niship/sky-ratio-calc.git
-cd sky-ratio-calc
+git clone --recursive https://github.com/20niship/skyratio_calc.git
+cd skyratio_calc
 
 # 編集可能モードでインストール
 pip install -e .
@@ -70,27 +58,15 @@ pip install -e .
 git submodule update --init --recursive
 ```
 
-### パッケージのビルド
-
-```bash
-pip install .
-```
-
-## テスト方法
-
-```bash
-python test/test_binding.py
-```
-
 ## 使用例
 
 ### Python
 
 ```python
-import sky_ratio_calc
+import skyratio_calc
 
 # シーンの作成
-scene = sky_ratio_calc.SceneRaycaster()
+scene = skyratio_calc.SceneRaycaster()
 
 # 建物を追加(ボックス: 位置, サイズ, オイラー角)
 scene.add_box([5.0, 0.0, 0.0], [2.0, 2.0, 10.0], [0.0, 0.0, 0.0])
@@ -103,7 +79,7 @@ scene.add_sphere([0.0, 8.0, 5.0], 2.0)
 scene.build()
 
 # 天空率チェッカーの作成
-checker = sky_ratio_calc.SkyRatioChecker()
+checker = skyratio_calc.SkyRatioChecker()
 checker.set_scene(scene)
 checker.ray_resolution = 5.0  # レイの角度刻み(度)
 
@@ -325,7 +301,7 @@ python benchmark.py
 
 ### 型チェックとコード補完
 
-このプロジェクトでは、IDEでの型チェックとコード補完を有効にするために、スタブファイル（`sky_ratio_calc.pyi`）を提供しています。
+このプロジェクトでは、IDEでの型チェックとコード補完を有効にするために、スタブファイル（`skyratio_calc.pyi`）を提供しています。
 
 スタブファイルはパッケージと一緒にインストールされるため、PyCharm、VS Code、mypyなどのツールで自動的に型チェックが有効になります。
 
@@ -391,7 +367,7 @@ git submodule update --init --recursive
 
 ### インポートエラー
 
-**問題**: `ImportError: No module named 'sky_ratio_calc'`
+**問題**: `ImportError: No module named 'skyratio_calc'`
 
 **解決策**: パッケージがインストールされていることを確認してください。
 
@@ -422,7 +398,7 @@ GPU加速に興味がある場合は、[tiny_bvh GPUサンプル](https://github
 
 ## 貢献
 
-バグ報告や機能リクエストは、[GitHub Issues](https://github.com/20niship/sky-ratio-calc/issues)で受け付けています。
+バグ報告や機能リクエストは、[GitHub Issues](https://github.com/20niship/skyratio_calc/issues)で受け付けています。
 
 プルリクエストも歓迎します！以下の手順に従ってください：
 
