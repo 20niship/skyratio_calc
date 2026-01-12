@@ -81,6 +81,30 @@ for i, ratio in enumerate(sky_ratios):
 
 詳細なサンプルは `test/sample_python.py` を参照してください。
 
+### Pure Python実装
+
+C++バインディングを使わない純粋なPython実装も提供しています（学習・テスト用途）：
+
+```python
+from test.python_implementation import SceneRaycasterPython, SkyRatioCheckerPython
+
+# シーンの作成
+scene = SceneRaycasterPython()
+scene.add_box([5.0, 0.0, 5.0], [2.0, 2.0, 4.0])
+scene.build()
+
+# 天空率チェッカーの作成
+checker = SkyRatioCheckerPython()
+checker.set_scene(scene)
+checker.ray_resolution = 5.0
+checker.checkpoints = [[0.0, 0.0, 1.5]]
+
+# 天空率を計算
+sky_ratios = checker.check()
+```
+
+**注意**: Pure Python実装はC++実装より約18-20倍遅いため、実用用途ではC++バインディングの使用を推奨します。
+
 ### C++
 
 ```cpp
@@ -162,6 +186,15 @@ C++サンプルの実行：
 ## パフォーマンス比較
 
 このプロジェクトでは、C++実装（Pythonバインディング経由）と純粋なPython実装の両方を提供しています。以下は、両実装の性能比較結果です。
+
+### ベンチマークの実行方法
+
+```bash
+cd test
+python benchmark.py
+```
+
+ベンチマークを実行すると、`benchmark_rectangles.png` と `benchmark_checkpoints.png` がリポジトリのルートディレクトリに生成されます。
 
 ### ベンチマーク設定
 

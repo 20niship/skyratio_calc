@@ -106,7 +106,13 @@ class SceneRaycasterPython:
         self.boxes: List[Box] = []
     
     def add_box(self, pos: List[float], size: List[float], euler: List[float] = None):
-        """Add a box to the scene (euler angles are ignored in this simple implementation)"""
+        """
+        Add a box to the scene
+        
+        Note: euler parameter is accepted for API compatibility with C++ version,
+        but rotation is not supported in this simplified Python implementation.
+        All boxes are axis-aligned.
+        """
         center = Vec3.from_list(pos)
         box_size = Vec3.from_list(size)
         self.boxes.append(Box(center, box_size))

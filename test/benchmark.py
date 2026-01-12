@@ -1,11 +1,21 @@
 """
 Benchmark script to compare C++ and pure Python implementations
+
+Run this script from the test directory:
+    cd test && python benchmark.py
+    
+The benchmark graphs will be saved in the parent directory (repository root).
 """
 import time
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 import sky_ratio_calc
 from python_implementation import SceneRaycasterPython, SkyRatioCheckerPython
+
+
+# Set output directory to parent directory (repository root)
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..')
 
 
 def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 5.0) -> float:
@@ -123,7 +133,7 @@ def benchmark_comparison_1():
     plt.legend(fontsize=11)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    output_path = '/home/runner/work/sky-ratio-calc/sky-ratio-calc/benchmark_rectangles.png'
+    output_path = os.path.join(OUTPUT_DIR, 'benchmark_rectangles.png')
     plt.savefig(output_path, dpi=150)
     print(f"Saved graph to {output_path}")
     
@@ -169,7 +179,7 @@ def benchmark_comparison_2():
     plt.legend(fontsize=11)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    output_path = '/home/runner/work/sky-ratio-calc/sky-ratio-calc/benchmark_checkpoints.png'
+    output_path = os.path.join(OUTPUT_DIR, 'benchmark_checkpoints.png')
     plt.savefig(output_path, dpi=150)
     print(f"Saved graph to {output_path}")
     
