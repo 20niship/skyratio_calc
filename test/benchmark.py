@@ -1,10 +1,10 @@
 """
-Benchmark script to compare C++ and pure Python implementations
+C++実装と純粋なPython実装の性能を比較するベンチマークスクリプト
 
-Run this script from the test directory:
+testディレクトリから実行してください:
     cd test && python benchmark.py
     
-The benchmark graphs will be saved in the parent directory (repository root).
+ベンチマークグラフは親ディレクトリ（リポジトリルート）に保存されます。
 """
 import time
 import os
@@ -14,32 +14,32 @@ import sky_ratio_calc
 from python_implementation import SceneRaycasterPython, SkyRatioCheckerPython
 
 
-# Set output directory to parent directory (repository root)
+# 出力ディレクトリを親ディレクトリ（リポジトリルート）に設定
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..')
 
 
 def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 5.0) -> float:
     """
-    Benchmark C++ implementation
-    Returns: execution time in seconds
+    C++実装のベンチマーク
+    戻り値: 実行時間（秒）
     """
-    # Create scene with boxes
+    # ボックスを持つシーンを作成
     scene = sky_ratio_calc.SceneRaycaster()
     
     for i in range(num_boxes):
-        # Add boxes at different positions
+        # 異なる位置にボックスを追加
         x = (i % 5) * 5.0 - 10.0
         y = (i // 5) * 5.0 - 10.0
         scene.add_box([x, y, 5.0], [2.0, 2.0, 4.0], [0.0, 0.0, 0.0])
     
     scene.build()
     
-    # Create checker with multiple checkpoints
+    # 複数の測定点を持つチェッカーを作成
     checker = sky_ratio_calc.SkyRatioChecker()
     checker.set_scene(scene)
     checker.ray_resolution = ray_resolution
     
-    # Generate checkpoints
+    # 測定点を生成
     checkpoints = []
     for i in range(num_checkpoints):
         x = (i % 10) * 2.0 - 10.0
@@ -48,7 +48,7 @@ def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 
     
     checker.checkpoints = checkpoints
     
-    # Measure time
+    # 時間を計測
     start_time = time.time()
     sky_ratios = checker.check()
     end_time = time.time()
@@ -58,26 +58,26 @@ def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 
 
 def benchmark_python(num_boxes: int, num_checkpoints: int, ray_resolution: float = 5.0) -> float:
     """
-    Benchmark pure Python implementation
-    Returns: execution time in seconds
+    純粋なPython実装のベンチマーク
+    戻り値: 実行時間（秒）
     """
-    # Create scene with boxes
+    # ボックスを持つシーンを作成
     scene = SceneRaycasterPython()
     
     for i in range(num_boxes):
-        # Add boxes at different positions
+        # 異なる位置にボックスを追加
         x = (i % 5) * 5.0 - 10.0
         y = (i // 5) * 5.0 - 10.0
         scene.add_box([x, y, 5.0], [2.0, 2.0, 4.0], [0.0, 0.0, 0.0])
     
     scene.build()
     
-    # Create checker with multiple checkpoints
+    # 複数の測定点を持つチェッカーを作成
     checker = SkyRatioCheckerPython()
     checker.set_scene(scene)
     checker.ray_resolution = ray_resolution
     
-    # Generate checkpoints
+    # 測定点を生成
     checkpoints = []
     for i in range(num_checkpoints):
         x = (i % 10) * 2.0 - 10.0
@@ -86,7 +86,7 @@ def benchmark_python(num_boxes: int, num_checkpoints: int, ray_resolution: float
     
     checker.checkpoints = checkpoints
     
-    # Measure time
+    # 時間を計測
     start_time = time.time()
     sky_ratios = checker.check()
     end_time = time.time()
@@ -96,10 +96,10 @@ def benchmark_python(num_boxes: int, num_checkpoints: int, ray_resolution: float
 
 def benchmark_comparison_1():
     """
-    Comparison 1: Number of rectangles (1-10) vs computation time
-    Fixed: 100 checkpoints, ray_resolution = 10.0 degrees
+    比較1: 長方形の数（1〜10個）と計算時間
+    固定値: 測定点100個、ray_resolution = 10.0度
     """
-    print("=== Benchmark 1: Number of rectangles vs computation time ===")
+    print("=== ベンチマーク1: 長方形の数と計算時間 ===")
     
     num_boxes_list = list(range(1, 11))
     num_checkpoints = 100
@@ -109,43 +109,43 @@ def benchmark_comparison_1():
     python_times = []
     
     for num_boxes in num_boxes_list:
-        print(f"Testing with {num_boxes} boxes...")
+        print(f"{num_boxes}個のボックスでテスト中...")
         
-        # C++ benchmark
+        # C++ベンチマーク
         cpp_time = benchmark_cpp(num_boxes, num_checkpoints, ray_resolution)
         cpp_times.append(cpp_time)
-        print(f"  C++ time: {cpp_time:.4f} seconds")
+        print(f"  C++時間: {cpp_time:.4f}秒")
         
-        # Python benchmark
+        # Pythonベンチマーク
         python_time = benchmark_python(num_boxes, num_checkpoints, ray_resolution)
         python_times.append(python_time)
-        print(f"  Python time: {python_time:.4f} seconds")
-        print(f"  Speedup: {python_time / cpp_time:.2f}x")
+        print(f"  Python時間: {python_time:.4f}秒")
+        print(f"  高速化倍率: {python_time / cpp_time:.2f}x")
         print()
     
-    # Plot results
+    # 結果をプロット
     plt.figure(figsize=(10, 6))
-    plt.plot(num_boxes_list, cpp_times, 'o-', label='C++ Implementation', linewidth=2, markersize=8)
-    plt.plot(num_boxes_list, python_times, 's-', label='Pure Python Implementation', linewidth=2, markersize=8)
-    plt.xlabel('Number of Rectangles', fontsize=12)
-    plt.ylabel('Computation Time (seconds)', fontsize=12)
-    plt.title('Performance Comparison: Number of Rectangles vs Computation Time\n(100 checkpoints, 10° resolution)', fontsize=14)
+    plt.plot(num_boxes_list, cpp_times, 'o-', label='C++実装', linewidth=2, markersize=8)
+    plt.plot(num_boxes_list, python_times, 's-', label='純粋なPython実装', linewidth=2, markersize=8)
+    plt.xlabel('長方形の数', fontsize=12)
+    plt.ylabel('計算時間（秒）', fontsize=12)
+    plt.title('パフォーマンス比較: 長方形の数と計算時間\n（測定点100個、解像度10°）', fontsize=14)
     plt.legend(fontsize=11)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     output_path = os.path.join(OUTPUT_DIR, 'benchmark_rectangles.png')
     plt.savefig(output_path, dpi=150)
-    print(f"Saved graph to {output_path}")
+    print(f"グラフを保存しました: {output_path}")
     
     return num_boxes_list, cpp_times, python_times
 
 
 def benchmark_comparison_2():
     """
-    Comparison 2: Number of measurement points (10-300) vs computation time
-    Fixed: 5 rectangles, ray_resolution = 10.0 degrees
+    比較2: 測定点の数（10〜300個）と計算時間
+    固定値: 長方形5個、ray_resolution = 10.0度
     """
-    print("\n=== Benchmark 2: Number of measurement points vs computation time ===")
+    print("\n=== ベンチマーク2: 測定点の数と計算時間 ===")
     
     num_checkpoints_list = [10, 30, 50, 70, 100, 150, 200, 250, 300]
     num_boxes = 5
@@ -155,73 +155,73 @@ def benchmark_comparison_2():
     python_times = []
     
     for num_checkpoints in num_checkpoints_list:
-        print(f"Testing with {num_checkpoints} checkpoints...")
+        print(f"{num_checkpoints}個の測定点でテスト中...")
         
-        # C++ benchmark
+        # C++ベンチマーク
         cpp_time = benchmark_cpp(num_boxes, num_checkpoints, ray_resolution)
         cpp_times.append(cpp_time)
-        print(f"  C++ time: {cpp_time:.4f} seconds")
+        print(f"  C++時間: {cpp_time:.4f}秒")
         
-        # Python benchmark
+        # Pythonベンチマーク
         python_time = benchmark_python(num_boxes, num_checkpoints, ray_resolution)
         python_times.append(python_time)
-        print(f"  Python time: {python_time:.4f} seconds")
-        print(f"  Speedup: {python_time / cpp_time:.2f}x")
+        print(f"  Python時間: {python_time:.4f}秒")
+        print(f"  高速化倍率: {python_time / cpp_time:.2f}x")
         print()
     
-    # Plot results
+    # 結果をプロット
     plt.figure(figsize=(10, 6))
-    plt.plot(num_checkpoints_list, cpp_times, 'o-', label='C++ Implementation', linewidth=2, markersize=8)
-    plt.plot(num_checkpoints_list, python_times, 's-', label='Pure Python Implementation', linewidth=2, markersize=8)
-    plt.xlabel('Number of Measurement Points', fontsize=12)
-    plt.ylabel('Computation Time (seconds)', fontsize=12)
-    plt.title('Performance Comparison: Number of Measurement Points vs Computation Time\n(5 rectangles, 10° resolution)', fontsize=14)
+    plt.plot(num_checkpoints_list, cpp_times, 'o-', label='C++実装', linewidth=2, markersize=8)
+    plt.plot(num_checkpoints_list, python_times, 's-', label='純粋なPython実装', linewidth=2, markersize=8)
+    plt.xlabel('測定点の数', fontsize=12)
+    plt.ylabel('計算時間（秒）', fontsize=12)
+    plt.title('パフォーマンス比較: 測定点の数と計算時間\n（長方形5個、解像度10°）', fontsize=14)
     plt.legend(fontsize=11)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     output_path = os.path.join(OUTPUT_DIR, 'benchmark_checkpoints.png')
     plt.savefig(output_path, dpi=150)
-    print(f"Saved graph to {output_path}")
+    print(f"グラフを保存しました: {output_path}")
     
     return num_checkpoints_list, cpp_times, python_times
 
 
 def print_summary(boxes_data, checkpoints_data):
-    """Print summary statistics"""
+    """サマリー統計を出力"""
     print("\n" + "="*70)
-    print("BENCHMARK SUMMARY")
+    print("ベンチマーク結果サマリー")
     print("="*70)
     
     num_boxes_list, cpp_times_1, python_times_1 = boxes_data
     num_checkpoints_list, cpp_times_2, python_times_2 = checkpoints_data
     
-    # Summary for benchmark 1
+    # ベンチマーク1のサマリー
     avg_speedup_1 = np.mean([p / c for p, c in zip(python_times_1, cpp_times_1)])
-    print("\nBenchmark 1 (Varying number of rectangles):")
-    print(f"  Average C++ time: {np.mean(cpp_times_1):.4f} seconds")
-    print(f"  Average Python time: {np.mean(python_times_1):.4f} seconds")
-    print(f"  Average speedup (Python/C++): {avg_speedup_1:.2f}x")
+    print("\nベンチマーク1（長方形の数を変化）:")
+    print(f"  平均C++時間: {np.mean(cpp_times_1):.4f}秒")
+    print(f"  平均Python時間: {np.mean(python_times_1):.4f}秒")
+    print(f"  平均高速化倍率（Python/C++）: {avg_speedup_1:.2f}x")
     
-    # Summary for benchmark 2
+    # ベンチマーク2のサマリー
     avg_speedup_2 = np.mean([p / c for p, c in zip(python_times_2, cpp_times_2)])
-    print("\nBenchmark 2 (Varying number of measurement points):")
-    print(f"  Average C++ time: {np.mean(cpp_times_2):.4f} seconds")
-    print(f"  Average Python time: {np.mean(python_times_2):.4f} seconds")
-    print(f"  Average speedup (Python/C++): {avg_speedup_2:.2f}x")
+    print("\nベンチマーク2（測定点の数を変化）:")
+    print(f"  平均C++時間: {np.mean(cpp_times_2):.4f}秒")
+    print(f"  平均Python時間: {np.mean(python_times_2):.4f}秒")
+    print(f"  平均高速化倍率（Python/C++）: {avg_speedup_2:.2f}x")
     
     print("\n" + "="*70)
 
 
 def main():
-    print("Sky Ratio Calculation - Performance Benchmark")
+    print("天空率計算 - パフォーマンスベンチマーク")
     print("=" * 70)
     print()
     
-    # Run benchmarks
+    # ベンチマークを実行
     boxes_data = benchmark_comparison_1()
     checkpoints_data = benchmark_comparison_2()
     
-    # Print summary
+    # サマリーを出力
     print_summary(boxes_data, checkpoints_data)
 
 
