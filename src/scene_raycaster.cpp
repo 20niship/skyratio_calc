@@ -104,6 +104,11 @@ void SceneRaycaster::add_sphere(const Vec3 &center, double radius) {
 }
 
 void SceneRaycaster::add_mesh(const std::vector<Vec3> &mesh_vertices) {
+    // 頂点数が3の倍数であることを確認
+    if (mesh_vertices.size() % 3 != 0) {
+        return; // 無効なメッシュは無視
+    }
+    
     size_t base_idx = vertices.size() / 3;
     
     for (const auto &v : mesh_vertices) {
@@ -179,8 +184,19 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3> &origins,
     
     // BVHを使用する場合(メッシュがある場合)
     if (!vertices.empty() && !indices.empty()) {
+        // インデックスを使って三角形頂点配列を作成
+        std::vector<tinybvh::bvhvec4> triangles;
+        triangles.reserve(indices.size());
+        
+        for (size_t i = 0; i < indices.size(); i++) {
+            size_t idx = indices[i] * 3;
+            triangles.push_back(tinybvh::bvhvec4(
+                vertices[idx], vertices[idx+1], vertices[idx+2], 0.0f
+            ));
+        }
+        
         tinybvh::BVH bvh;
-        bvh.Build(reinterpret_cast<tinybvh::bvhvec4*>(vertices.data()), vertices.size() / 3);
+        bvh.Build(triangles.data(), triangles.size() / 3);
         
         for (size_t i = 0; i < origins.size(); i++) {
             tinybvh::Ray ray(

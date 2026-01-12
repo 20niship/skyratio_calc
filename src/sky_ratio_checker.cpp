@@ -8,6 +8,11 @@
 std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoint(const Vec3 &checkpoint) {
     std::vector<std::tuple<Vec3, Vec3>> rays;
     
+    // ray_resolutionの妥当性チェック
+    if (ray_resolution <= 0.0f || ray_resolution > 180.0f) {
+        ray_resolution = 1.0f; // デフォルト値に設定
+    }
+    
     // 天空率は天頂方向を中心とした半球について計算
     double resolution_rad = ray_resolution * M_PI / 180.0;
     
@@ -15,6 +20,9 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
     int theta_steps = static_cast<int>(90.0 / ray_resolution);
     // 方位角(phi): 0度から360度まで
     int phi_steps = static_cast<int>(360.0 / ray_resolution);
+    
+    // phi_stepsが0になるのを防ぐ
+    if (phi_steps < 1) phi_steps = 1;
     
     for (int t = 0; t <= theta_steps; t++) {
         double theta = t * resolution_rad;
