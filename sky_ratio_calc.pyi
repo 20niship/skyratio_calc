@@ -5,7 +5,6 @@
 """
 
 from typing import List
-from typing import Tuple
 
 def add(a: int, b: int) -> int:
     """

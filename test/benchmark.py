@@ -48,7 +48,7 @@ def benchmark_cpp(num_boxes: int, num_checkpoints: int, ray_resolution: float = 
 
     checker.checkpoints = checkpoints
 
-    # 時間を計測
+    # 時間を計測（結果の値は使用せず、実行時間のみを測定）
     start_time = time.time()
     _ = checker.check()
     end_time = time.time()
@@ -86,7 +86,7 @@ def benchmark_python(num_boxes: int, num_checkpoints: int, ray_resolution: float
 
     checker.checkpoints = checkpoints
 
-    # 時間を計測
+    # 時間を計測（結果の値は使用せず、実行時間のみを測定）
     start_time = time.time()
     _ = checker.check()
     end_time = time.time()

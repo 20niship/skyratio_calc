@@ -11,7 +11,7 @@ import sys
 
 def generate_stub_file():
     """スタブファイルを生成"""
-    
+
     stub_content = '''"""
 天空率計算プロジェクト - 型スタブファイル
 
@@ -19,7 +19,6 @@ def generate_stub_file():
 """
 
 from typing import List
-from typing import Tuple
 
 def add(a: int, b: int) -> int:
     """
