@@ -5,6 +5,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// 天頂角の範囲設定（レイキャストの負荷軽減のため）
+static const double THETA_MIN_DEG = 20.0;
+static const double THETA_MAX_DEG = 89.0;
+
 std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoint(const Vec3& checkpoint) {
   std::vector<std::tuple<Vec3, Vec3>> rays;
 
@@ -17,9 +21,7 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
   double resolution_rad = ray_resolution * M_PI / 180.0;
 
   // 天頂角(theta): 20度から89度までに変更（負荷軽減のため）
-  double theta_min = 20.0;
-  double theta_max = 89.0;
-  int theta_steps = static_cast<int>((theta_max - theta_min) / ray_resolution);
+  int theta_steps = static_cast<int>((THETA_MAX_DEG - THETA_MIN_DEG) / ray_resolution);
   
   // 方位角(phi): 0度から360度まで
   int phi_steps = static_cast<int>(360.0 / ray_resolution);
@@ -28,7 +30,7 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
   if(phi_steps < 1) phi_steps = 1;
 
   for(int t = 0; t <= theta_steps; t++) {
-    double theta = (theta_min + t * ray_resolution) * M_PI / 180.0;
+    double theta = (THETA_MIN_DEG + t * ray_resolution) * M_PI / 180.0;
     double sin_theta = std::sin(theta);
     double cos_theta = std::cos(theta);
 
@@ -77,18 +79,18 @@ std::vector<float> SkyRatioChecker::check() {
     // 三斜求積法による天空率の計算
     double resolution_rad = ray_resolution * M_PI / 180.0;
     
-    // 天頂角の範囲（変更後）
-    double theta_min_deg = 20.0;
-    double theta_max_deg = 89.0;
+    // 方位角の分割数
     int phi_steps = static_cast<int>(360.0 / ray_resolution);
     if(phi_steps < 1) phi_steps = 1;
     
-    int theta_steps = static_cast<int>((theta_max_deg - theta_min_deg) / ray_resolution);
+    int theta_steps = static_cast<int>((THETA_MAX_DEG - THETA_MIN_DEG) / ray_resolution);
 
     // 各方位角(phi)における、空が見える最小天頂角を格納する配列
     std::vector<double> visible_theta(phi_steps);
     
-    // 初期値は0度（天頂）とする（障害物がなければ天頂から見える）
+    // 初期値: THETA_MIN_DEGより低い角度は検査しないため、
+    // 0度（天頂）から検査開始角度までは空が見えると仮定
+    double theta_min_rad = THETA_MIN_DEG * M_PI / 180.0;
     for(int p = 0; p < phi_steps; p++) {
       visible_theta[p] = 0.0;
     }
@@ -96,7 +98,7 @@ std::vector<float> SkyRatioChecker::check() {
     // レイキャスト結果から、各方位角で空が見える最小天頂角を求める
     int ray_index = 0;
     for(int t = 0; t <= theta_steps; t++) {
-      double theta = (theta_min_deg + t * ray_resolution) * M_PI / 180.0;
+      double theta = (THETA_MIN_DEG + t * ray_resolution) * M_PI / 180.0;
       
       for(int p = 0; p < phi_steps; p++) {
         if(ray_index < hit_results.size()) {
@@ -114,8 +116,7 @@ std::vector<float> SkyRatioChecker::check() {
               blocked_theta -= resolution_rad;
             }
             
-            // 範囲制限
-            if(blocked_theta < 0.0) blocked_theta = 0.0;
+            // 範囲制限: 90度を超えないようにする
             if(blocked_theta > M_PI / 2.0) blocked_theta = M_PI / 2.0;
             
             // この方位角で最も遮られた角度を記録
