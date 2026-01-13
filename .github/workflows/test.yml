@@ -36,3 +36,4 @@ jobs:
     - name: テストの実行
       run: |
         python test/test_binding.py
+        python test/test_sky_ratio_integration.py
