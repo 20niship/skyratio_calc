@@ -16,8 +16,11 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
   // 天空率は天頂方向を中心とした半球について計算
   double resolution_rad = ray_resolution * M_PI / 180.0;
 
-  // 天頂角(theta): 0度(真上)から90度(水平)まで
-  int theta_steps = static_cast<int>(90.0 / ray_resolution);
+  // 天頂角(theta): 20度から89度までに変更（負荷軽減のため）
+  double theta_min = 20.0;
+  double theta_max = 89.0;
+  int theta_steps = static_cast<int>((theta_max - theta_min) / ray_resolution);
+  
   // 方位角(phi): 0度から360度まで
   int phi_steps = static_cast<int>(360.0 / ray_resolution);
 
@@ -25,14 +28,11 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
   if(phi_steps < 1) phi_steps = 1;
 
   for(int t = 0; t <= theta_steps; t++) {
-    double theta     = t * resolution_rad;
+    double theta = (theta_min + t * ray_resolution) * M_PI / 180.0;
     double sin_theta = std::sin(theta);
     double cos_theta = std::cos(theta);
 
-    // 天頂(theta=0)の場合は1本のレイのみ
-    int current_phi_steps = (t == 0) ? 1 : phi_steps;
-
-    for(int p = 0; p < current_phi_steps; p++) {
+    for(int p = 0; p < phi_steps; p++) {
       double phi = p * 2.0 * M_PI / phi_steps;
 
       // 球面座標から直交座標への変換
@@ -71,49 +71,97 @@ std::vector<float> SkyRatioChecker::check() {
       directions.push_back(std::get<1>(ray));
     }
 
-    // レイキャスト実行（一度だけ）
+    // レイキャスト実行
     auto hit_results = raycaster->raycast(origins, directions);
 
-    // 積分計算による天空率の計算
+    // 三斜求積法による天空率の計算
     double resolution_rad = ray_resolution * M_PI / 180.0;
-
-    int theta_steps = static_cast<int>(90.0 / ray_resolution);
-    int phi_steps   = static_cast<int>(360.0 / ray_resolution);
+    
+    // 天頂角の範囲（変更後）
+    double theta_min_deg = 20.0;
+    double theta_max_deg = 89.0;
+    int phi_steps = static_cast<int>(360.0 / ray_resolution);
     if(phi_steps < 1) phi_steps = 1;
+    
+    int theta_steps = static_cast<int>((theta_max_deg - theta_min_deg) / ray_resolution);
 
-    // 空が見える部分の投影面積を計算
-    double sky_area = 0.0;
-    int ray_index   = 0;
+    // 各方位角(phi)における、空が見える最小天頂角を格納する配列
+    std::vector<double> visible_theta(phi_steps);
+    
+    // 初期値は0度（天頂）とする（障害物がなければ天頂から見える）
+    for(int p = 0; p < phi_steps; p++) {
+      visible_theta[p] = 0.0;
+    }
 
+    // レイキャスト結果から、各方位角で空が見える最小天頂角を求める
+    int ray_index = 0;
     for(int t = 0; t <= theta_steps; t++) {
-      // レイの角度に対応するセルの範囲を計算
-      double theta_start = t * resolution_rad;
-      double theta_end   = (t + 1) * resolution_rad;
-      if(theta_end > M_PI / 2.0) theta_end = M_PI / 2.0;
-
-      int current_phi_steps = (t == 0) ? 1 : phi_steps;
-
-      // このthetaセルの投影面積の重み（phi方向の積分なし）
-      double theta_area = (std::sin(theta_end) * std::sin(theta_end) - std::sin(theta_start) * std::sin(theta_start)) / 2.0;
-
-      for(int p = 0; p < current_phi_steps; p++) {
-        if(ray_index < hit_results.size() && !hit_results[ray_index].hit) {
-          if(t == 0) {
-            // 天頂の場合は全周（2π）を代表
-            sky_area += theta_area * 2.0 * M_PI;
-          } else {
-            // 通常のセルは dPhi の範囲を代表
-            double dPhi = 2.0 * M_PI / phi_steps;
-            sky_area += theta_area * dPhi;
+      double theta = (theta_min_deg + t * ray_resolution) * M_PI / 180.0;
+      
+      for(int p = 0; p < phi_steps; p++) {
+        if(ray_index < hit_results.size()) {
+          if(hit_results[ray_index].hit) {
+            // 建物にヒット → この角度では空が見えない
+            // この方位角における最大の遮蔽角度を更新
+            double blocked_theta = theta;
+            
+            // 安全側評価の適用
+            if(use_safe_side) {
+              // 内接近似：建物を大きく見積もる（空を小さく見積もる）
+              blocked_theta += resolution_rad;
+            } else {
+              // 外接近似：建物を小さく見積もる（空を大きく見積もる）
+              blocked_theta -= resolution_rad;
+            }
+            
+            // 範囲制限
+            if(blocked_theta < 0.0) blocked_theta = 0.0;
+            if(blocked_theta > M_PI / 2.0) blocked_theta = M_PI / 2.0;
+            
+            // この方位角で最も遮られた角度を記録
+            if(blocked_theta > visible_theta[p]) {
+              visible_theta[p] = blocked_theta;
+            }
           }
         }
         ray_index++;
       }
     }
 
+    // 三斜求積法による面積計算
+    // 各方位角間で三角形を作り、その面積を合計する
+    double sky_area = 0.0;
+    double d_phi = 2.0 * M_PI / phi_steps; // 方位角の刻み
+
+    for(int p = 0; p < phi_steps; p++) {
+      int p_next = (p + 1) % phi_steps;
+      
+      // 2つの隣接する方位角での空が見える開始角度（遮蔽終了角度）
+      double theta1 = visible_theta[p];
+      double theta2 = visible_theta[p_next];
+      
+      // 各方位角での正射影上の半径（中心からの距離）
+      // 天頂角thetaに対する正射影上の半径はsin(theta)
+      // 空が見える部分の長さは、sin(90°) - sin(theta) = 1 - sin(theta)
+      double L1 = 1.0 - std::sin(theta1);
+      double L2 = 1.0 - std::sin(theta2);
+      
+      // 三角形の面積公式：中心点から2辺が伸びる三角形
+      // 2辺の長さがL1, L2で、間の角度がd_phi
+      // 面積 = (1/2) * L1 * L2 * sin(d_phi)
+      double triangle_area = 0.5 * L1 * L2 * std::sin(d_phi);
+      
+      sky_area += triangle_area;
+    }
+
     // 全天の投影面積はπ（半径1の円）
     double total_area = M_PI;
-    float sky_ratio   = static_cast<float>(sky_area / total_area);
+    float sky_ratio = static_cast<float>(sky_area / total_area);
+    
+    // 範囲制限
+    if(sky_ratio < 0.0f) sky_ratio = 0.0f;
+    if(sky_ratio > 1.0f) sky_ratio = 1.0f;
+    
     results.push_back(sky_ratio);
   }
 
