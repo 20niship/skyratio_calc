@@ -129,7 +129,7 @@ std::vector<float> SkyRatioChecker::check() {
     }
 
     // 三斜求積法による面積計算
-    // 各方位角間で三角形を作り、その面積を合計する
+    // 各方位角間で扇形セグメントの面積を計算し合計する
     double sky_area = 0.0;
     double d_phi = 2.0 * M_PI / phi_steps; // 方位角の刻み
 
@@ -140,18 +140,17 @@ std::vector<float> SkyRatioChecker::check() {
       double theta1 = visible_theta[p];
       double theta2 = visible_theta[p_next];
       
-      // 各方位角での正射影上の半径（中心からの距離）
-      // 天頂角thetaに対する正射影上の半径はsin(theta)
-      // 空が見える部分の長さは、sin(90°) - sin(theta) = 1 - sin(theta)
-      double L1 = 1.0 - std::sin(theta1);
-      double L2 = 1.0 - std::sin(theta2);
+      // 正射影上の面積：各方位角での天頂角からの寄与
+      // 天頂角θから90°までの正射影面積の重みは cos²(θ)
+      // 2つの方位角での平均を取り、扇形の角度dφを掛ける
+      double area_weight1 = std::cos(theta1) * std::cos(theta1);
+      double area_weight2 = std::cos(theta2) * std::cos(theta2);
+      double avg_weight = (area_weight1 + area_weight2) / 2.0;
       
-      // 三角形の面積公式：中心点から2辺が伸びる三角形
-      // 2辺の長さがL1, L2で、間の角度がd_phi
-      // 面積 = (1/2) * L1 * L2 * sin(d_phi)
-      double triangle_area = 0.5 * L1 * L2 * std::sin(d_phi);
+      // このセグメントの面積
+      double segment_area = 0.5 * avg_weight * d_phi;
       
-      sky_area += triangle_area;
+      sky_area += segment_area;
     }
 
     // 全天の投影面積はπ（半径1の円）
