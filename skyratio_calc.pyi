@@ -131,16 +131,11 @@ class SkyRatioChecker:
     ray_resolution: float
     """レイの角度刻み（度）。デフォルトは1.0度。小さいほど精度が高いが計算時間が増加"""
     
-    def set_scene(self, scene: SceneRaycaster) -> None:
-        """
-        シーンを設定
-        
-        Args:
-            scene: 構築済みのSceneRaycasterオブジェクト
-        """
-        ...
+    use_safe_side: bool
+    """安全側評価（内接近似）を使うかどうか。デフォルトはFalse（外接近似）"""
     
-    def check(self) -> List[float]:
+    
+    def check(self, scene:SceneRaycaster) -> List[float]:
         """
         各測定点の天空率を計算
         

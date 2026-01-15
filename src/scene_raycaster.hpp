@@ -7,6 +7,7 @@
 #include "ext/tinybvh/tiny_bvh.h"
 
 using Vec3 = std::array<double, 3>;
+using Vec3i = std::array<int, 3>;
 
 struct HitResult {
   bool hit        = false;
@@ -27,11 +28,10 @@ struct Sphere {
 
 class SceneRaycaster {
 private:
+  std::vector<tinybvh::bvhvec4> triangles;
   bool build_dirty = true;
   std::vector<Box> boxes;
   std::vector<Sphere> spheres;
-  std::vector<float> vertices;
-  std::vector<unsigned int> indices;
   tinybvh::BVH* bvh = nullptr;
 
 public:
@@ -52,4 +52,7 @@ public:
   void add_mesh(const std::vector<Vec3>& mesh_vertices);
   void build();
   std::vector<HitResult> raycast(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) const;
+
+  std::vector<Vec3> vertices;
+  std::vector<Vec3i> indices;
 };

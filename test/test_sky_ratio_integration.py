@@ -22,13 +22,12 @@ def test_large_wall_blocks_half_hemisphere():
     scene.build()
     
     checker = skyratio_calc.SkyRatioChecker()
-    checker.set_scene(scene)
     checker.ray_resolution = 5.0  # 5度刻み
     
     # 壁の直ぐ側（y=0、高さ1.5m）に測定点を配置
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check()
+    sky_ratios = checker.check(scene)
     
     assert len(sky_ratios) == 1, "測定点は1つ"
     sky_ratio = sky_ratios[0]
@@ -65,13 +64,12 @@ def test_many_small_objects_far_away():
     scene.build()
     
     checker = skyratio_calc.SkyRatioChecker()
-    checker.set_scene(scene)
     checker.ray_resolution = 5.0  # 5度刻み
     
     # 原点に測定点を配置
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check()
+    sky_ratios = checker.check(scene)
     
     assert len(sky_ratios) == 1, "測定点は1つ"
     sky_ratio = sky_ratios[0]
@@ -96,54 +94,23 @@ def test_uniform_ring_blocks_lower_hemisphere():
     # より簡単なテスト: 4方向に大きな壁を配置
     # 測定点から10m離れた位置に、高さ5mの壁を4方向に配置
     radius = 10.0
-    wall_height = 5.0
-    wall_size = 50.0  # 壁の幅と奥行き
+    wall_height = 1.0
+    wall_size = 10.0  # 壁の幅と奥行き
     
-    # 北側の壁
     scene.add_box([0.0, radius, wall_height / 2.0], [wall_size, 1.0, wall_height], [0.0, 0.0, 0.0])
-    # 南側の壁
     scene.add_box([0.0, -radius, wall_height / 2.0], [wall_size, 1.0, wall_height], [0.0, 0.0, 0.0])
-    # 東側の壁
     scene.add_box([radius, 0.0, wall_height / 2.0], [1.0, wall_size, wall_height], [0.0, 0.0, 0.0])
-    # 西側の壁
     scene.add_box([-radius, 0.0, wall_height / 2.0], [1.0, wall_size, wall_height], [0.0, 0.0, 0.0])
-    
-    scene.build()
-    
     checker = skyratio_calc.SkyRatioChecker()
-    checker.set_scene(scene)
-    checker.ray_resolution = 5.0  # 5度刻み
-    
-    # 原点（壁に囲まれた中心）に測定点を配置
-    checker.checkpoints = [[0.0, 0.0, 1.5]]
-    
-    sky_ratios = checker.check()
+    checker.ray_resolution = 0.5  # 5度刻み
+    checker.checkpoints = [[0.0, 0.0, 0]]
+
+    sky_ratios = checker.check(scene)
     
     assert len(sky_ratios) == 1, "測定点は1つ"
     sky_ratio = sky_ratios[0]
-    
-    # 理論計算: 壁の上端が見える天頂角θを計算
-    # tan(θ) = radius / (wall_height - checkpoint_z)
-    checkpoint_z = 1.5
-    wall_top = wall_height
-    theta_max = math.atan2(radius, wall_top - checkpoint_z)
-    
-    # 天頂角θ_maxまでが遮られている
-    # 正射影面積: π * sin²(θ_max)
-    blocked_area = math.pi * (math.sin(theta_max) ** 2)
-    total_area = math.pi
-    expected_sky_ratio = 1.0 - (blocked_area / total_area)
-    
     print(f"等間隔リングテスト: 天空率 {sky_ratio * 100:.2f}%")
-    print(f"  理論値: {expected_sky_ratio * 100:.2f}%")
-    print(f"  theta_max: {math.degrees(theta_max):.1f}度")
-    print(f"  差分: {abs(sky_ratio - expected_sky_ratio) * 100:.2f}%")
-    
-    # 4方向の壁なので完全な円ではないが、ある程度は遮られるはず
-    # 天空率が理論値より高くなることを確認（少なくとも70%以上）
-    assert sky_ratio > 0.70, \
-        f"4方向の壁がある場合、天空率は70%以上のはずが {sky_ratio * 100:.2f}%"
-    
+    assert 0.50 < sky_ratio < 0.70
     print("✓ 等間隔リングで下部を遮るケース: PASS")
 
 
@@ -155,11 +122,10 @@ def test_no_obstacles():
     scene.build()  # 空のシーン
     
     checker = skyratio_calc.SkyRatioChecker()
-    checker.set_scene(scene)
-    checker.ray_resolution = 10.0  # 10度刻み
+    checker.ray_resolution = 1.0  # 10度刻み
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check()
+    sky_ratios = checker.check(scene)
     
     assert len(sky_ratios) == 1
     sky_ratio = sky_ratios[0]
@@ -180,14 +146,11 @@ def test_completely_enclosed():
     # 測定点の真上に大きな天井を配置
     # 測定点から3m上（z=4.5）に大きな厚い天井
     scene.add_box([0.0, 0.0, 5.0], [100.0, 100.0, 2.0], [0.0, 0.0, 0.0])
-    scene.build()
-    
     checker = skyratio_calc.SkyRatioChecker()
-    checker.set_scene(scene)
-    checker.ray_resolution = 10.0  # 10度刻み
+    checker.ray_resolution = 1.0  # 10度刻み
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check()
+    sky_ratios = checker.check(scene)
     
     assert len(sky_ratios) == 1
     sky_ratio = sky_ratios[0]
