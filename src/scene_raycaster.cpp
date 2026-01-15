@@ -221,7 +221,7 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3>& origins,
 void SceneRaycaster::save(const char* filepath) {
   std::ofstream file(filepath, std::ios::binary);
   if(!file) {
-    throw std::runtime_error("Failed to open file for writing");
+    throw std::runtime_error(std::string("Failed to open file for writing: ") + filepath);
   }
 
   // STL binary format header (80 bytes)
@@ -234,6 +234,11 @@ void SceneRaycaster::save(const char* filepath) {
 
   // Write each triangle
   for(const auto& idx : indices) {
+    // Validate indices
+    if(idx[0] >= static_cast<int>(vertices.size()) || idx[1] >= static_cast<int>(vertices.size()) || idx[2] >= static_cast<int>(vertices.size())) {
+      throw std::runtime_error("Invalid vertex index in triangle");
+    }
+
     // Calculate normal vector (cross product)
     const Vec3& v0 = vertices[idx[0]];
     const Vec3& v1 = vertices[idx[1]];
@@ -249,6 +254,9 @@ void SceneRaycaster::save(const char* filepath) {
       normal[0] /= len;
       normal[1] /= len;
       normal[2] /= len;
+    } else {
+      // Degenerate triangle: use default normal
+      normal = {0.0, 0.0, 1.0};
     }
 
     // Write normal
