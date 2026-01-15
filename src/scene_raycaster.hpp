@@ -27,6 +27,7 @@ struct Sphere {
 
 class SceneRaycaster {
 private:
+  std::vector<tinybvh::bvhvec4> triangles;
   bool build_dirty = true;
   std::vector<Box> boxes;
   std::vector<Sphere> spheres;

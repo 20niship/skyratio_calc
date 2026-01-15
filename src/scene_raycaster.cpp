@@ -163,9 +163,8 @@ void SceneRaycaster::build() {
 
   // BVHを構築
   if(!vertices.empty() && !indices.empty()) {
-    std::vector<tinybvh::bvhvec4> triangles;
+    triangles.clear();
     triangles.reserve(indices.size());
-
     for(size_t i = 0; i < indices.size(); i++) {
       size_t idx = indices[i] * 3;
       triangles.push_back(tinybvh::bvhvec4(vertices[idx], vertices[idx + 1], vertices[idx + 2], 0.0f));
@@ -197,7 +196,7 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3>& origins,
     // rays[i].hit.prim = std::numeric_limits<uint32_t>::max();
     // rays[i].hit.t    = 1e30f; // 初期化
   }
-#if 0
+#if 1
   // 256レイずつバッチ処理
   const size_t batch_size  = 256;
   const size_t num_batches = (rays.size() + batch_size - 1) / batch_size;
@@ -233,7 +232,6 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3>& origins,
   }
 #else
   for(size_t i = 0; i < rays.size(); i++) results[i].hit = bvh->IsOccluded(rays[i]);
-  printf("Raycasted %zu rays\n", rays.size());
 #endif
 
   return results;
