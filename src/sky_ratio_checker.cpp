@@ -96,37 +96,39 @@ std::vector<float> SkyRatioChecker::check() {
     }
 
     // レイキャスト結果から、各方位角で空が見える最小天頂角を求める
-    int ray_index = 0;
-    for(int t = 0; t <= theta_steps; t++) {
-      double theta = (THETA_MIN_DEG + t * ray_resolution) * M_PI / 180.0;
+    // 方位角ごとにループを回し、各方向で最初に空が見える角度を探す
+    for(int p = 0; p < phi_steps; p++) {
+      // この方位角での最大遮蔽角度（空が見え始める角度）
+      double max_blocked_theta = 0.0;
       
-      for(int p = 0; p < phi_steps; p++) {
-        if(ray_index < hit_results.size()) {
-          if(hit_results[ray_index].hit) {
-            // 建物にヒット → この角度では空が見えない
-            // この方位角における最大の遮蔽角度を更新
-            double blocked_theta = theta;
-            
-            // 安全側評価の適用
-            if(use_safe_side) {
-              // 内接近似：建物を大きく見積もる（空を小さく見積もる）
-              blocked_theta += resolution_rad;
-            } else {
-              // 外接近似：建物を小さく見積もる（空を大きく見積もる）
-              blocked_theta -= resolution_rad;
-            }
-            
-            // 範囲制限: 90度を超えないようにする
-            if(blocked_theta > M_PI / 2.0) blocked_theta = M_PI / 2.0;
-            
-            // この方位角で最も遮られた角度を記録
-            if(blocked_theta > visible_theta[p]) {
-              visible_theta[p] = blocked_theta;
-            }
+      for(int t = 0; t <= theta_steps; t++) {
+        double theta = (THETA_MIN_DEG + t * ray_resolution) * M_PI / 180.0;
+        int ray_index = t * phi_steps + p;
+        
+        if(ray_index < hit_results.size() && hit_results[ray_index].hit) {
+          // 建物にヒット → この角度では空が見えない
+          double blocked_theta = theta;
+          
+          // 安全側評価の適用
+          if(use_safe_side) {
+            // 内接近似：建物を大きく見積もる（空を小さく見積もる）
+            blocked_theta += resolution_rad;
+          } else {
+            // 外接近似：建物を小さく見積もる（空を大きく見積もる）
+            blocked_theta -= resolution_rad;
+          }
+          
+          // 範囲制限: 90度を超えないようにする
+          if(blocked_theta > M_PI / 2.0) blocked_theta = M_PI / 2.0;
+          
+          // この方位角で最も遮られた角度を更新
+          if(blocked_theta > max_blocked_theta) {
+            max_blocked_theta = blocked_theta;
           }
         }
-        ray_index++;
       }
+      
+      visible_theta[p] = max_blocked_theta;
     }
 
     // 三斜求積法による面積計算
