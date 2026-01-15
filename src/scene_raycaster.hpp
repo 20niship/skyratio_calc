@@ -30,8 +30,6 @@ private:
   bool build_dirty = true;
   std::vector<Box> boxes;
   std::vector<Sphere> spheres;
-  std::vector<float> vertices;
-  std::vector<unsigned int> indices;
   tinybvh::BVH* bvh = nullptr;
 
 public:
@@ -52,4 +50,7 @@ public:
   void add_mesh(const std::vector<Vec3>& mesh_vertices);
   void build();
   std::vector<HitResult> raycast(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) const;
+
+  std::vector<float> vertices;
+  std::vector<unsigned int> indices;
 };

@@ -16,6 +16,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/ext/nanobind)
 # tiny_bvhのインクルードパス
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+add_compile_options(-Wall -Wextra)
+
 # C++サンプル実行ファイル
 add_executable(sample_cpp 
     src/sample_cpp.cpp

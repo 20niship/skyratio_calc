@@ -1,5 +1,5 @@
 #include "scene_raycaster.hpp"
-#include <algorithm>
+#include <algorithm> // dont delete
 #include <cmath>
 #include <limits>
 
@@ -175,27 +175,29 @@ void SceneRaycaster::build() {
     bvh = new tinybvh::BVH();
     bvh->Build(triangles.data(), triangles.size() / 3);
   }
-
   build_dirty = false;
 }
 
 std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) const {
-  // build_dirtyの場合は、constメソッドなのでビルドできない
-  // 呼び出し側でbuild()を事前に呼ぶ必要がある
-
   std::vector<HitResult> results(origins.size());
 
   if(!bvh || origins.empty()) {
+    printf("BVH = %p, num rays = %zu\n", (void*)bvh, origins.size());
+    throw std::runtime_error("BVH is not built or no rays to cast.");
     return results;
   }
 
-  // レイを準備
-  std::vector<tinybvh::Ray> rays;
-  rays.reserve(origins.size());
+  std::vector<tinybvh::Ray> rays(origins.size());
   for(size_t i = 0; i < origins.size(); i++) {
-    rays.emplace_back(tinybvh::bvhvec3(static_cast<float>(origins[i][0]), static_cast<float>(origins[i][1]), static_cast<float>(origins[i][2])), tinybvh::bvhvec3(static_cast<float>(directions[i][0]), static_cast<float>(directions[i][1]), static_cast<float>(directions[i][2])));
+    rays[i] = tinybvh::Ray(                                                                       //
+      tinybvh::bvhvec3((float)origins[i][0], (float)origins[i][1], (float)origins[i][2]),         //
+      tinybvh::bvhvec3((float)directions[i][0], (float)directions[i][1], (float)directions[i][2]) //
+    );
+    // rays[i].hit.inst = std::numeric_limits<uint32_t>::max();
+    // rays[i].hit.prim = std::numeric_limits<uint32_t>::max();
+    // rays[i].hit.t    = 1e30f; // 初期化
   }
-
+#if 0
   // 256レイずつバッチ処理
   const size_t batch_size  = 256;
   const size_t num_batches = (rays.size() + batch_size - 1) / batch_size;
@@ -224,8 +226,15 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3>& origins,
       results[i].position[0] = origins[i][0] + directions[i][0] * rays[i].hit.t;
       results[i].position[1] = origins[i][1] + directions[i][1] * rays[i].hit.t;
       results[i].position[2] = origins[i][2] + directions[i][2] * rays[i].hit.t;
+    } else {
+      results[i].hit      = false;
+      results[i].distance = std::numeric_limits<double>::infinity();
     }
   }
+#else
+  for(size_t i = 0; i < rays.size(); i++) results[i].hit = bvh->IsOccluded(rays[i]);
+  printf("Raycasted %zu rays\n", rays.size());
+#endif
 
   return results;
 }
