@@ -29,7 +29,10 @@ NB_MODULE(skyratio_calc, m) {
     .def("add_mesh", &SceneRaycaster::add_mesh, nb::arg("vertices"),
          "メッシュを追加") //
     .def("build", &SceneRaycaster::build, "BVHを構築")
-    .def("raycast", &SceneRaycaster::raycast, nb::arg("origins"), nb::arg("directions"), "レイキャストを実行");
+    .def("raycast", &SceneRaycaster::raycast, nb::arg("origins"), nb::arg("directions"), "レイキャストを実行")
+    .def("save", &SceneRaycaster::save, nb::arg("filepath"), "頂点データをSTLファイルに保存")
+    .def_rw("vertices", &SceneRaycaster::vertices, "頂点リスト")
+    .def_rw("indices", &SceneRaycaster::indices, "インデックスリスト");
 
   // SkyRatioCheckerクラス
   nb::class_<SkyRatioChecker>(m, "SkyRatioChecker")

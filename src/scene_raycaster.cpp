@@ -1,7 +1,9 @@
 #include "scene_raycaster.hpp"
 #include <algorithm> // dont delete
 #include <cmath>
+#include <fstream>
 #include <limits>
+#include <stdexcept>
 
 #define TINYBVH_IMPLEMENTATION
 #include "ext/tinybvh/tiny_bvh.h"
@@ -214,4 +216,56 @@ std::vector<HitResult> SceneRaycaster::raycast(const std::vector<Vec3>& origins,
 #endif
 
   return results;
+}
+
+void SceneRaycaster::save(const char* filepath) {
+  std::ofstream file(filepath, std::ios::binary);
+  if(!file) {
+    throw std::runtime_error("Failed to open file for writing");
+  }
+
+  // STL binary format header (80 bytes)
+  char header[80] = {0};
+  file.write(header, 80);
+
+  // Number of triangles (4 bytes)
+  uint32_t num_triangles = static_cast<uint32_t>(indices.size());
+  file.write(reinterpret_cast<const char*>(&num_triangles), sizeof(uint32_t));
+
+  // Write each triangle
+  for(const auto& idx : indices) {
+    // Calculate normal vector (cross product)
+    const Vec3& v0 = vertices[idx[0]];
+    const Vec3& v1 = vertices[idx[1]];
+    const Vec3& v2 = vertices[idx[2]];
+
+    Vec3 edge1 = {v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
+    Vec3 edge2 = {v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
+    Vec3 normal = {edge1[1] * edge2[2] - edge1[2] * edge2[1], edge1[2] * edge2[0] - edge1[0] * edge2[2], edge1[0] * edge2[1] - edge1[1] * edge2[0]};
+
+    // Normalize
+    double len = std::sqrt(normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]);
+    if(len > 0.0) {
+      normal[0] /= len;
+      normal[1] /= len;
+      normal[2] /= len;
+    }
+
+    // Write normal
+    float normal_f[3] = {static_cast<float>(normal[0]), static_cast<float>(normal[1]), static_cast<float>(normal[2])};
+    file.write(reinterpret_cast<const char*>(normal_f), 3 * sizeof(float));
+
+    // Write vertices
+    for(int i = 0; i < 3; i++) {
+      const Vec3& v = vertices[idx[i]];
+      float v_f[3]  = {static_cast<float>(v[0]), static_cast<float>(v[1]), static_cast<float>(v[2])};
+      file.write(reinterpret_cast<const char*>(v_f), 3 * sizeof(float));
+    }
+
+    // Attribute byte count (2 bytes, typically 0)
+    uint16_t attribute_count = 0;
+    file.write(reinterpret_cast<const char*>(&attribute_count), sizeof(uint16_t));
+  }
+
+  file.close();
 }

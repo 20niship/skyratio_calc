@@ -52,6 +52,7 @@ public:
   void add_mesh(const std::vector<Vec3>& mesh_vertices);
   void build();
   std::vector<HitResult> raycast(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) const;
+  void save(const char* filepath);
 
   std::vector<Vec3> vertices;
   std::vector<Vec3i> indices;
