@@ -7,6 +7,7 @@
 #include "ext/tinybvh/tiny_bvh.h"
 
 using Vec3 = std::array<double, 3>;
+using Vec3i = std::array<int, 3>;
 
 struct HitResult {
   bool hit        = false;
@@ -52,6 +53,6 @@ public:
   void build();
   std::vector<HitResult> raycast(const std::vector<Vec3>& origins, const std::vector<Vec3>& directions) const;
 
-  std::vector<float> vertices;
-  std::vector<unsigned int> indices;
+  std::vector<Vec3> vertices;
+  std::vector<Vec3i> indices;
 };

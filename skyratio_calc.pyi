@@ -134,16 +134,8 @@ class SkyRatioChecker:
     use_safe_side: bool
     """安全側評価（内接近似）を使うかどうか。デフォルトはFalse（外接近似）"""
     
-    def set_scene(self, scene: SceneRaycaster) -> None:
-        """
-        シーンを設定
-        
-        Args:
-            scene: 構築済みのSceneRaycasterオブジェクト
-        """
-        ...
     
-    def check(self) -> List[float]:
+    def check(self, scene:SceneRaycaster) -> List[float]:
         """
         各測定点の天空率を計算
         

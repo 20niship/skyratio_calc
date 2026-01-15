@@ -38,3 +38,10 @@ install(TARGETS sample_cpp RUNTIME DESTINATION .)
 
 # スタブファイルのインストール
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/skyratio_calc.pyi DESTINATION .)
+
+# Enable AddressSanitizer and MemorySanitizer for Debug builds
+# if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#     set(SANITIZER_FLAGS "-fsanitize=address -fsanitize=undefined")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS} -fno-omit-frame-pointer")
+#     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+# endif()
