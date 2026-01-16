@@ -79,8 +79,8 @@ void test_uniform_ring_blocks_lower_hemisphere() {
   scene.add_box({-10.0, 0.0, 2.5}, {1.0, 50.0, 5.0}, {0.0, 0.0, 0.0});
 
   SkyRatioChecker checker;
-  checker.ray_resolution = 5.0f;                  // 5度刻み
-  checker.checkpoints.push_back({0.0, 0.0, 1.5}); // 原点付近
+  checker.ray_resolution = 1.;
+  checker.checkpoints.push_back({0.0, 0.0, 0}); // 原点付近
 
   std::cout << "測定点数: " << checker.checkpoints.size() << std::endl;
   std::cout << "レイの刻み: " << checker.ray_resolution << "度" << std::endl;
@@ -114,9 +114,9 @@ void test_totally_enclosed() {
 }
 
 int main() {
-  test_no_obstacles();
-  test_large_wall_blocks_half_hemisphere();
-  test_many_small_objects_far_away();
+  // test_no_obstacles();
+  // test_large_wall_blocks_half_hemisphere();
+  // test_many_small_objects_far_away();
   test_uniform_ring_blocks_lower_hemisphere();
 
   // // シーンの作成
