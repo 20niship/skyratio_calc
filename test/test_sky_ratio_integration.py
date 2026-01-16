@@ -22,12 +22,13 @@ def test_large_wall_blocks_half_hemisphere():
     scene.build()
     
     checker = skyratio_calc.SkyRatioChecker()
+    checker.set_scene(scene)
     checker.ray_resolution = 5.0  # 5度刻み
     
     # 壁の直ぐ側（y=0、高さ1.5m）に測定点を配置
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check(scene)
+    sky_ratios = checker.check()
     
     assert len(sky_ratios) == 1, "測定点は1つ"
     sky_ratio = sky_ratios[0]
@@ -64,12 +65,13 @@ def test_many_small_objects_far_away():
     scene.build()
     
     checker = skyratio_calc.SkyRatioChecker()
+    checker.set_scene(scene)
     checker.ray_resolution = 5.0  # 5度刻み
     
     # 原点に測定点を配置
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check(scene)
+    sky_ratios = checker.check()
     
     assert len(sky_ratios) == 1, "測定点は1つ"
     sky_ratio = sky_ratios[0]
@@ -102,10 +104,11 @@ def test_uniform_ring_blocks_lower_hemisphere():
     scene.add_box([radius, 0.0, wall_height / 2.0], [1.0, wall_size, wall_height], [0.0, 0.0, 0.0])
     scene.add_box([-radius, 0.0, wall_height / 2.0], [1.0, wall_size, wall_height], [0.0, 0.0, 0.0])
     checker = skyratio_calc.SkyRatioChecker()
+    checker.set_scene(scene)
     checker.ray_resolution = 0.5  # 5度刻み
     checker.checkpoints = [[0.0, 0.0, 0]]
 
-    sky_ratios = checker.check(scene)
+    sky_ratios = checker.check()
     
     assert len(sky_ratios) == 1, "測定点は1つ"
     sky_ratio = sky_ratios[0]
@@ -122,10 +125,11 @@ def test_no_obstacles():
     scene.build()  # 空のシーン
     
     checker = skyratio_calc.SkyRatioChecker()
+    checker.set_scene(scene)
     checker.ray_resolution = 1.0  # 10度刻み
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check(scene)
+    sky_ratios = checker.check()
     
     assert len(sky_ratios) == 1
     sky_ratio = sky_ratios[0]
@@ -147,10 +151,11 @@ def test_completely_enclosed():
     # 測定点から3m上（z=4.5）に大きな厚い天井
     scene.add_box([0.0, 0.0, 5.0], [100.0, 100.0, 2.0], [0.0, 0.0, 0.0])
     checker = skyratio_calc.SkyRatioChecker()
+    checker.set_scene(scene)
     checker.ray_resolution = 1.0  # 10度刻み
     checker.checkpoints = [[0.0, 0.0, 1.5]]
     
-    sky_ratios = checker.check(scene)
+    sky_ratios = checker.check()
     
     assert len(sky_ratios) == 1
     sky_ratio = sky_ratios[0]

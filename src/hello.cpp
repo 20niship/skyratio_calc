@@ -40,5 +40,6 @@ NB_MODULE(skyratio_calc, m) {
     .def_rw("checkpoints", &SkyRatioChecker::checkpoints, "測定点のリスト")
     .def_rw("ray_resolution", &SkyRatioChecker::ray_resolution, "レイの刻み角度(度)")
     .def_rw("use_safe_side", &SkyRatioChecker::use_safe_side, "安全側評価（内接近似）を使うかどうか")
+    .def("set_scene", &SkyRatioChecker::set_scene, nb::arg("scene"), "シーンを設定")
     .def("check", &SkyRatioChecker::check, "天空率を計算");
 }

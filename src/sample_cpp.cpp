@@ -7,6 +7,7 @@ void test_no_obstacles() {
   std::cout << "=== 天空率計算サンプル ===" << std::endl;
   SceneRaycaster scene;
   SkyRatioChecker checker;
+  checker.set_scene(scene);
   checker.ray_resolution = 10.0f;                 // 10度刻み
   checker.checkpoints.push_back({0.0, 0.0, 1.5}); // 原点付近
 
@@ -14,7 +15,7 @@ void test_no_obstacles() {
   std::cout << "レイの刻み: " << checker.ray_resolution << "度" << std::endl;
 
   std::cout << "\n天空率を計算中..." << std::endl;
-  auto sky_ratios = checker.check(&scene);
+  auto sky_ratios = checker.check();
   std::cout << "\n=== 計算結果 ===" << std::endl;
   for(size_t i = 0; i < sky_ratios.size(); i++) {
     const auto& cp = checker.checkpoints[i];
@@ -27,6 +28,7 @@ void test_large_wall_blocks_half_hemisphere() {
   SceneRaycaster scene;
   scene.add_box({0.0, 2.0, 50.0}, {100.0, 1.0, 100.0}, {0.0, 0.0, 0.0});
   SkyRatioChecker checker;
+  checker.set_scene(scene);
   checker.ray_resolution = 5.0f;                  // 5度刻み
   checker.checkpoints.push_back({0.0, 0.0, 1.5}); // 原点付近
 
@@ -34,7 +36,7 @@ void test_large_wall_blocks_half_hemisphere() {
   std::cout << "レイの刻み: " << checker.ray_resolution << "度" << std::endl;
 
   std::cout << "\n天空率を計算中..." << std::endl;
-  auto sky_ratios = checker.check(&scene);
+  auto sky_ratios = checker.check();
   std::cout << "\n=== 計算結果 ===" << std::endl;
   for(size_t i = 0; i < sky_ratios.size(); i++) {
     const auto& cp = checker.checkpoints[i];
@@ -58,6 +60,7 @@ void test_many_small_objects_far_away() {
   }
 
   SkyRatioChecker checker;
+  checker.set_scene(scene);
   checker.ray_resolution = 5.0f;                  // 5度刻み
   checker.checkpoints.push_back({0.0, 0.0, 1.5}); // 原点付近
 
@@ -65,7 +68,7 @@ void test_many_small_objects_far_away() {
   std::cout << "レイの刻み: " << checker.ray_resolution << "度" << std::endl;
 
   std::cout << "\n天空率を計算中..." << std::endl;
-  auto sky_ratios = checker.check(&scene);
+  auto sky_ratios = checker.check();
   std::cout << "\n=== 計算結果 ===" << std::endl;
   for(size_t i = 0; i < sky_ratios.size(); i++) {
     const auto& cp = checker.checkpoints[i];
@@ -87,6 +90,7 @@ void test_uniform_ring_blocks_lower_hemisphere() {
   scene.add_box({-10.0, 0.0, 2.5}, {1.0, 50.0, 5.0}, {0.0, 0.0, 0.0});
 
   SkyRatioChecker checker;
+  checker.set_scene(scene);
   checker.ray_resolution = 5.0f;                  // 5度刻み
   checker.checkpoints.push_back({0.0, 0.0, 1.5}); // 原点付近
 
@@ -94,7 +98,7 @@ void test_uniform_ring_blocks_lower_hemisphere() {
   std::cout << "レイの刻み: " << checker.ray_resolution << "度" << std::endl;
 
   std::cout << "\n天空率を計算中..." << std::endl;
-  auto sky_ratios = checker.check(&scene);
+  auto sky_ratios = checker.check();
   std::cout << "\n=== 計算結果 ===" << std::endl;
   for(size_t i = 0; i < sky_ratios.size(); i++) {
     const auto& cp = checker.checkpoints[i];
@@ -109,6 +113,7 @@ void test_totally_enclosed() {
   scene.build();
 
   SkyRatioChecker checker;
+  checker.set_scene(scene);
   checker.ray_resolution = 5.0f;                  // 5度刻み
   checker.checkpoints.push_back({0.0, 0.0, 1.5}); // 原点付近
 
@@ -116,7 +121,7 @@ void test_totally_enclosed() {
   std::cout << "レイの刻み: " << checker.ray_resolution << "度" << std::endl;
 
   std::cout << "\n天空率を計算中..." << std::endl;
-  auto sky_ratios = checker.check(&scene);
+  auto sky_ratios = checker.check();
   std::cout << "\n=== 計算結果 ===" << std::endl;
   for(size_t i = 0; i < sky_ratios.size(); i++) {
     const auto& cp = checker.checkpoints[i];

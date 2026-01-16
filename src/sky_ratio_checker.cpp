@@ -42,8 +42,12 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
   return rays;
 }
 
-std::vector<float> SkyRatioChecker::check(SceneRaycaster* raycaster) {
-  if(raycaster == nullptr) {
+void SkyRatioChecker::set_scene(SceneRaycaster& scene_ref) {
+  scene = &scene_ref;
+}
+
+std::vector<float> SkyRatioChecker::check() {
+  if(scene == nullptr) {
     printf("[ERROR] SkyRatioChecker: SceneRaycaster is not set.\n");
     return {};
   }
@@ -51,8 +55,8 @@ std::vector<float> SkyRatioChecker::check(SceneRaycaster* raycaster) {
   std::vector<float> results;
   results.reserve(checkpoints.size());
 
-  raycaster->build();
-  if(raycaster->vertices.empty() || raycaster->indices.empty()) {
+  scene->build();
+  if(scene->vertices.empty() || scene->indices.empty()) {
     printf("[WARNING] SkyRatioChecker: SceneRaycaster has no geometry.\n");
     return {1};
   }
@@ -70,7 +74,7 @@ std::vector<float> SkyRatioChecker::check(SceneRaycaster* raycaster) {
       directions.push_back(std::get<1>(ray));
     }
 
-    const auto hit_results    = raycaster->raycast(origins, directions);
+    const auto hit_results    = scene->raycast(origins, directions);
     const auto resolution_rad = ray_resolution * M_PI / 180.0;
     const int phi_steps       = std::max((int)(360.0 / ray_resolution), 1);
     const int theta_steps     = static_cast<int>((THETA_MAX_DEG - THETA_MIN_DEG) / ray_resolution);
