@@ -30,11 +30,7 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
       double phi = p * 2.0 * M_PI / phi_steps;
 
       // 球面座標から直交座標への変換
-      Vec3 direction = {
-        sin_theta * std::cos(phi), sin_theta * std::sin(phi),
-        cos_theta // Z軸を上方向とする
-      };
-
+      Vec3 direction{cos_theta * std::cos(phi), cos_theta * std::sin(phi), sin_theta};
       rays.push_back(std::make_tuple(checkpoint, direction));
     }
   }
@@ -117,11 +113,7 @@ std::vector<float> SkyRatioChecker::check(SceneRaycaster* raycaster) {
       sky_area += segment_area;
     }
 
-    // 全天の投影面積はπ（半径1の円）
-    const double total_area = M_PI;
-    const double Sd_phi     = std::sin(2.0 * M_PI / phi_steps); // 方位角の刻み
-
-    float sky_ratio = (sky_area * 0.5 * Sd_phi) / total_area;
+    float sky_ratio = sky_area / phi_steps;
 
     // 範囲制限
     if(sky_ratio < 0.0f) sky_ratio = 0.0f;
