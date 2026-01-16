@@ -42,11 +42,17 @@ std::vector<std::tuple<Vec3, Vec3>> SkyRatioChecker::generate_rays_from_checkpoi
   return rays;
 }
 
-std::vector<float> SkyRatioChecker::check(SceneRaycaster* raycaster) {
-  if(raycaster == nullptr) {
+void SkyRatioChecker::set_scene(SceneRaycaster& scene_ref) {
+  scene = &scene_ref;
+}
+
+std::vector<float> SkyRatioChecker::check() {
+  if(scene == nullptr) {
     printf("[ERROR] SkyRatioChecker: SceneRaycaster is not set.\n");
     return {};
   }
+  
+  SceneRaycaster* raycaster = scene;
 
   std::vector<float> results;
   results.reserve(checkpoints.size());
